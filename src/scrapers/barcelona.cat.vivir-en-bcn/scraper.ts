@@ -1,16 +1,16 @@
 import { chromium, Browser, Page } from "playwright";
 import { JSDOM } from "jsdom";
-import { EventData } from "types/event.js";
-import { ScraperResult } from "types/output.js";
-import { ScraperConfig } from "types/config.js";
+import { EventData } from "@/types/event.js";
+import { ScraperResult } from "@/types/output.js";
+import { ScraperConfig } from "@/types/config.js";
 import {
   DEFAULT_CONFIG,
   BROWSER_CONFIG,
   SELECTORS,
-} from "./config/scraper.config";
-import { BARCELONA_EXTRACTION_CONFIG } from "./config/extraction.config";
-import { DOMExtractor } from "../../utils/extraction.utils";
-import { BarcelonaEventProcessor } from "../../utils/processor.utils";
+} from "./config/scraper.config.js";
+import { BARCELONA_EXTRACTION_CONFIG } from "./config/extraction.config.js";
+import { DOMExtractor } from "@/utils/extraction.utils.js";
+import { BarcelonaEventProcessor } from "@/utils/processor.utils.js";
 
 /**
  * Barcelona Events Scraper Service

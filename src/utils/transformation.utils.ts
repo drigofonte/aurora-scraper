@@ -1,5 +1,5 @@
-import { DataTransformer, RawEventData } from "types/extraction.js";
-import { EventData } from "types/event.js";
+import { DataTransformer, RawEventData } from "@/types/extraction.js";
+import { EventData } from "@/types/event.js";
 
 /**
  * Transforms raw Barcelona event data into structured EventData

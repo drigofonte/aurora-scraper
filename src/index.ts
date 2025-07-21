@@ -1,12 +1,12 @@
-import { BarcelonaEventsScraper } from "./scrapers/barcelona.cat.vivir-en-bcn/scraper";
-import { JsonOutput } from "./types/output.js";
-import { OUTPUT_PATHS } from "./scrapers/barcelona.cat.vivir-en-bcn/config/scraper.config";
+import { BarcelonaEventsScraper } from "./scrapers/barcelona.cat.vivir-en-bcn/scraper.js";
+import { JsonOutput } from "@/types/output.js";
+import { OUTPUT_PATHS } from "./scrapers/barcelona.cat.vivir-en-bcn/config/scraper.config.js";
 import {
   saveJsonFile,
   saveHtmlFile,
   ensureDirectoryExists,
-} from "./io/file.utils";
-import { formatScrapingDate } from "./utils/common.utils";
+} from "@/io/file.utils.js";
+import { formatScrapingDate } from "@/utils/common.utils.js";
 import * as path from "path";
 
 /**
@@ -68,7 +68,8 @@ async function main(): Promise<void> {
 }
 
 // Run the application if this file is executed directly
-if (require.main === module) {
+// In ES modules, we check if the file is the main entry point using import.meta
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
     console.error("💥 Unhandled error:", error);
     process.exit(1);

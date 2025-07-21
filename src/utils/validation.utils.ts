@@ -1,5 +1,5 @@
-import { DataValidator } from "types/extraction.js";
-import { EventData } from "types/event.js";
+import { DataValidator } from "@/types/extraction.js";
+import { EventData } from "@/types/event.js";
 
 /**
  * Validates Barcelona event data quality

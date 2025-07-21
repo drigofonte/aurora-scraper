@@ -1,8 +1,8 @@
-import { DataProcessor, RawEventData } from "types/extraction.js";
-import { EventData } from "types/event.js";
-import { DOMExtractor } from "./extraction.utils";
-import { BarcelonaEventTransformer } from "./transformation.utils";
-import { EventDataValidator } from "./validation.utils";
+import { DataProcessor, RawEventData } from "@/types/extraction.js";
+import { EventData } from "@/types/event.js";
+import { DOMExtractor } from "@/utils/extraction.utils.js";
+import { BarcelonaEventTransformer } from "@/utils/transformation.utils.js";
+import { EventDataValidator } from "@/utils/validation.utils.js";
 
 /**
  * Complete data processing pipeline for Barcelona events

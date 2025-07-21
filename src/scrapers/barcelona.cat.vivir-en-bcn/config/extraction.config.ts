@@ -1,5 +1,5 @@
-import { ExtractionFieldMap } from "types/extraction.js";
-import { SELECTORS } from "./scraper.config";
+import { ExtractionFieldMap } from "@/types/extraction.js";
+import { SELECTORS } from "./scraper.config.js";
 
 /**
  * Field mapping configuration for Barcelona events extraction

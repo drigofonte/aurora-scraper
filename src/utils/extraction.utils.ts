@@ -3,7 +3,7 @@ import {
   RawEventData,
   ExtractionFieldMap,
   FieldExtractionConfig,
-} from "types/extraction.js";
+} from "@/types/extraction.js";
 
 /**
  * Generic DOM-based data extractor that uses field mapping configuration
