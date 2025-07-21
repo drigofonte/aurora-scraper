@@ -1,4 +1,4 @@
-import { ScraperConfig } from "../../../types/config.js";
+import { ScraperConfig } from "types/config.js";
 
 /**
  * Default configuration for the Barcelona events scraper

@@ -1,8 +1,8 @@
 import { chromium, Browser, Page } from "playwright";
 import { JSDOM } from "jsdom";
-import { EventData } from "../../types/event.js";
-import { ScraperResult } from "../../types/output.js";
-import { ScraperConfig } from "../../types/config.js";
+import { EventData } from "types/event.js";
+import { ScraperResult } from "types/output.js";
+import { ScraperConfig } from "types/config.js";
 import {
   DEFAULT_CONFIG,
   BROWSER_CONFIG,

@@ -1,4 +1,4 @@
-import { EventData } from "../../types/event.js";
+import { EventData } from "types/event.js";
 import { SELECTORS } from "./config/scraper.config";
 
 /**

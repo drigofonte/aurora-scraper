@@ -1,5 +1,5 @@
 import * as fs from "fs/promises";
-import { JsonOutput } from "../types/output.js";
+import { JsonOutput } from "types/output.js";
 
 /**
  * Saves data to a JSON file
