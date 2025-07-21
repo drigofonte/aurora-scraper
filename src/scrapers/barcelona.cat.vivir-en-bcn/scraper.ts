@@ -8,7 +8,9 @@ import {
   BROWSER_CONFIG,
   SELECTORS,
 } from "./config/scraper.config";
-import { extractItemData, isValidEventData } from "./data-extraction.utils";
+import { BARCELONA_EXTRACTION_CONFIG } from "./config/extraction.config";
+import { DOMExtractor } from "../../utils/extraction.utils";
+import { BarcelonaEventProcessor } from "../../utils/processor.utils";
 
 /**
  * Barcelona Events Scraper Service
@@ -16,9 +18,14 @@ import { extractItemData, isValidEventData } from "./data-extraction.utils";
  */
 export class BarcelonaEventsScraper {
   private config: ScraperConfig;
+  private processor: BarcelonaEventProcessor;
 
   constructor(config: Partial<ScraperConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+
+    // Initialize the data processing pipeline
+    const extractor = new DOMExtractor(BARCELONA_EXTRACTION_CONFIG);
+    this.processor = new BarcelonaEventProcessor(extractor);
   }
 
   /**
@@ -166,7 +173,7 @@ export class BarcelonaEventsScraper {
   }
 
   /**
-   * Extracts events from HTML content using JSDOM
+   * Extracts events from HTML content using the new processing pipeline
    */
   private async extractEventsFromContent(
     content: string
@@ -179,18 +186,10 @@ export class BarcelonaEventsScraper {
 
     console.log(`📋 Found ${items.length} total items`);
 
-    const eventsData: EventData[] = [];
+    // Convert NodeList to Array and process using the new pipeline
+    const itemElements = Array.from(items) as Element[];
+    const eventsData = this.processor.processMany(itemElements);
 
-    items.forEach((item, index) => {
-      console.log(`🔍 Processing item ${index + 1}/${items.length}`);
-      const itemData = extractItemData(item as Element);
-
-      if (isValidEventData(itemData)) {
-        eventsData.push(itemData);
-      }
-    });
-
-    console.log(`✅ Successfully extracted ${eventsData.length} valid events`);
     return eventsData;
   }
 }
