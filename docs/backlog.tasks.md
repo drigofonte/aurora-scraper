@@ -1,0 +1,1 @@
+- [ ] Revise the design of the scraper and create clear Extractor.extract() and Transformer.transform() functions.
