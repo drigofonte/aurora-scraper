@@ -4,9 +4,7 @@ import { EventData } from "@/types/event.js";
 /**
  * Transforms raw Barcelona event data into structured EventData
  */
-export class BarcelonaEventTransformer
-  implements DataTransformer<RawEventData, EventData>
-{
+export class BarcelonaEventTransformer implements DataTransformer<RawEventData, EventData> {
   /**
    * Transforms raw event data into structured EventData
    */

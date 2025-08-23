@@ -12,7 +12,7 @@ export interface FieldExtractionConfig {
   selector: string;
   attribute?: string; // If not provided, uses textContent
   required?: boolean;
-  transform?: (value: string) => string;
+  transform?: (_value: string) => string;
 }
 
 /**
@@ -31,7 +31,7 @@ export interface DataExtractor<TRaw = RawEventData> {
    * @param element - The DOM element to extract data from
    * @returns Raw extracted data
    */
-  extract(element: Element): TRaw;
+  extract(_element: Element): TRaw;
 }
 
 /**
@@ -43,7 +43,15 @@ export interface DataTransformer<TRaw, TTransformed> {
    * @param rawData - The raw data to transform
    * @returns Transformed structured data
    */
-  transform(rawData: TRaw): TTransformed;
+  transform(_rawData: TRaw): TTransformed;
+}
+
+/**
+ * Result of data validation
+ */
+export interface ValidationResult {
+  isValid: boolean;
+  errors: readonly string[];
 }
 
 /**
@@ -55,14 +63,14 @@ export interface DataValidator<T> {
    * @param data - The data to validate
    * @returns True if data is valid
    */
-  validate(data: T): boolean;
+  validate(data: T): ValidationResult;
 
   /**
    * Returns validation errors if any
    * @param data - The data to validate
    * @returns Array of validation error messages
    */
-  getValidationErrors?(data: T): string[];
+  getValidationErrors?(_data: T): readonly string[];
 }
 
 /**
@@ -78,5 +86,5 @@ export interface DataProcessor<TRaw, TTransformed> {
    * @param element - The DOM element to process
    * @returns Processed data or null if validation fails
    */
-  process(element: Element): TTransformed | null;
+  process(_element: Element): TTransformed | null;
 }

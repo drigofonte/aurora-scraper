@@ -3,11 +3,7 @@ import { JSDOM } from "jsdom";
 import { EventData } from "@/types/event.js";
 import { ScraperResult } from "@/types/output.js";
 import { ScraperConfig } from "@/types/config.js";
-import {
-  DEFAULT_CONFIG,
-  BROWSER_CONFIG,
-  SELECTORS,
-} from "./config/scraper.config.js";
+import { DEFAULT_CONFIG, BROWSER_CONFIG, SELECTORS } from "./config/scraper.config.js";
 import { BARCELONA_EXTRACTION_CONFIG } from "./config/extraction.config.js";
 import { DOMExtractor } from "@/utils/extraction.utils.js";
 import { BarcelonaEventProcessor } from "@/utils/processor.utils.js";
@@ -17,8 +13,8 @@ import { BarcelonaEventProcessor } from "@/utils/processor.utils.js";
  * Handles the scraping logic using Playwright
  */
 export class BarcelonaEventsScraper {
-  private config: ScraperConfig;
-  private processor: BarcelonaEventProcessor;
+  private readonly config: ScraperConfig;
+  private readonly processor: BarcelonaEventProcessor;
 
   constructor(config: Partial<ScraperConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -105,9 +101,7 @@ export class BarcelonaEventsScraper {
         console.log("⚠️ Accept All button not visible, trying alternative...");
 
         // Try the accept selection button as fallback
-        const acceptSelectionButton = page.locator(
-          SELECTORS.cookieAcceptSelection
-        );
+        const acceptSelectionButton = page.locator(SELECTORS.cookieAcceptSelection);
         if (await acceptSelectionButton.isVisible()) {
           await acceptSelectionButton.click();
           console.log("✅ Cookie selection accepted");
@@ -116,7 +110,7 @@ export class BarcelonaEventsScraper {
 
       // Small delay to ensure cookies are processed
       await page.waitForTimeout(2000);
-    } catch (error) {
+    } catch (_error) {
       console.log("ℹ️ No cookie consent dialog found or already handled");
       // Continue without error as this might not always be present
     }
@@ -154,9 +148,7 @@ export class BarcelonaEventsScraper {
           break;
         }
 
-        console.log(
-          `🔄 Clicking "Ver más" button (click ${clickCount + 1})...`
-        );
+        console.log(`🔄 Clicking "Ver más" button (click ${clickCount + 1})...`);
         await verMasButton.click();
         clickCount++;
 
@@ -175,9 +167,7 @@ export class BarcelonaEventsScraper {
   /**
    * Extracts events from HTML content using the new processing pipeline
    */
-  private async extractEventsFromContent(
-    content: string
-  ): Promise<EventData[]> {
+  private async extractEventsFromContent(content: string): Promise<EventData[]> {
     console.log("📊 Extracting event data...");
 
     const dom = new JSDOM(content);

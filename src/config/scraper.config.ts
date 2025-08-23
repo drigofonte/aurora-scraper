@@ -37,8 +37,7 @@ export const SELECTORS = {
   // Cookie consent selectors
   cookieBanner: "#cookiebanner",
   cookieAcceptAll: "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll",
-  cookieAcceptSelection:
-    "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowallSelection",
+  cookieAcceptSelection: "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowallSelection",
   cookieReject: "#CybotCookiebotDialogBodyLevelButtonLevelOptinDeclineAll",
 };
 

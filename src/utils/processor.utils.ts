@@ -7,9 +7,7 @@ import { EventDataValidator } from "@/utils/validation.utils.js";
 /**
  * Complete data processing pipeline for Barcelona events
  */
-export class BarcelonaEventProcessor
-  implements DataProcessor<RawEventData, EventData>
-{
+export class BarcelonaEventProcessor implements DataProcessor<RawEventData, EventData> {
   public readonly extractor: DOMExtractor;
   public readonly transformer: BarcelonaEventTransformer;
   public readonly validator: EventDataValidator;
