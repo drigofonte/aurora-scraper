@@ -1,0 +1,478 @@
+---
+feature: "ETL-Based Web Scraping Pipeline"
+version: "1.0"
+status: "draft"
+owner: "@user"
+created: "2025-08-25"
+updated: "2025-08-25"
+related_adrs: ["ADR-001"]
+components: ["extractor", "transformer", "loader", "pipeline"]
+tags: ["etl", "web-scraping", "pipeline", "extraction", "transformation"]
+---
+
+# ETL-Based Web Scraping Pipeline Specification
+
+## 1. Description
+
+### Overview
+
+A modular web scraping pipeline that separates extraction, transformation, and
+loading concerns into distinct, configurable, and testable components. The
+pipeline takes a URL as input, performs configurable navigation steps, extracts
+HTML content, transforms it into structured JSON data, and loads it to
+configurable target destinations.
+
+### Business Context
+
+The current monolithic scraper implementation is difficult to maintain, test,
+and extend. By implementing an ETL architecture, we can:
+
+- Support multiple output targets (files, cloud storage, databases)
+- Reuse extraction logic across different data transformations
+- Test each component in isolation
+- Scale different pipeline stages independently
+- Easily debug and monitor each stage
+
+### Success Criteria
+
+- Process Barcelona events webpage with 100+ events in under 30 seconds
+- Support switching between FileTarget and DigitalOceanSpaces through
+  configuration
+- Achieve 95% test coverage across all pipeline components
+- Handle network failures gracefully with configurable retry logic
+- Transform extracted HTML to valid JSON schema with 99% accuracy
+
+## 2. Architecture Decision Records
+
+### Key Decisions
+
+- **[ADR-001](../architecture-decision-records/ADR-001-etl-scraper-architecture.md):**
+  ETL-Based Scraper Architecture - Separation of extraction, transformation, and
+  loading concerns
+
+### Trade-offs Made
+
+- Increased complexity (3 components vs 1) in exchange for modularity and
+  testability
+- Higher memory usage (intermediate data structures) for better error isolation
+  and debugging
+
+## 3. API Blueprint
+
+### Input Contract
+
+```typescript
+interface PipelineInput {
+  url: string;
+  extractorConfig: ExtractorConfig;
+  transformerConfig: TransformerConfig;
+  loaderConfig: LoaderConfig;
+}
+
+interface ExtractorConfig {
+  navigationSteps: NavigationStep[];
+  timeout: number;
+  viewport: { width: number; height: number };
+  headless: boolean;
+}
+
+interface NavigationStep {
+  type: "click" | "wait" | "scroll" | "fill";
+  selector?: string;
+  value?: string;
+  timeout?: number;
+  maxAttempts?: number;
+}
+
+interface TransformerConfig {
+  schema: string; // JSON schema name/identifier
+  fieldMappings: Record<string, FieldMapping>;
+  validationRules?: ValidationRule[];
+}
+
+interface FieldMapping {
+  selector: string;
+  attribute?: "text" | "href" | "src" | "title";
+  transformer?: "date" | "price" | "url" | "html-to-text";
+  required?: boolean;
+}
+
+interface LoaderConfig {
+  target: "file" | "digitalocean-spaces" | "database";
+  targetConfig: FileTargetConfig | SpacesTargetConfig | DatabaseTargetConfig;
+}
+```
+
+### Output Contract
+
+```typescript
+interface PipelineOutput {
+  success: boolean;
+  result?: PipelineResult;
+  error?: PipelineError;
+  metadata: PipelineMetadata;
+}
+
+interface PipelineResult {
+  extractedHtml: string;
+  transformedData: Record<string, unknown>[];
+  loadedTo: string; // target location/identifier
+}
+
+interface PipelineError {
+  stage: "extractor" | "transformer" | "loader";
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+interface PipelineMetadata {
+  executionTime: number;
+  recordsProcessed: number;
+  extractorMetrics: ExtractorMetrics;
+  transformerMetrics: TransformerMetrics;
+  loaderMetrics: LoaderMetrics;
+}
+```
+
+### JSON Schema
+
+```json
+{
+  "$id": "https://example.com/schemas/ScrapedEvent.json",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "date": { "type": "string", "format": "date-time" },
+    "location": { "type": "string" },
+    "description": { "type": "string" },
+    "url": { "type": "string", "format": "uri" },
+    "imageUrl": { "type": "string", "format": "uri" },
+    "category": { "type": "string" },
+    "price": {
+      "type": "object",
+      "properties": {
+        "amount": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "enum": ["EUR", "USD"] }
+      }
+    }
+  },
+  "required": ["title", "date"],
+  "additionalProperties": false
+}
+```
+
+### Error Conditions
+
+| Error Code                 | Description                         | Stage       | Retry Strategy      |
+| -------------------------- | ----------------------------------- | ----------- | ------------------- |
+| `NAVIGATION_TIMEOUT`       | Navigation step exceeded timeout    | Extractor   | Exponential backoff |
+| `ELEMENT_NOT_FOUND`        | Required selector not found         | Extractor   | Linear retry        |
+| `INVALID_HTML`             | Extracted HTML is malformed         | Transformer | No retry            |
+| `SCHEMA_VALIDATION_FAILED` | Output doesn't match schema         | Transformer | No retry            |
+| `TARGET_UNAVAILABLE`       | Cannot reach target destination     | Loader      | Exponential backoff |
+| `PERMISSION_DENIED`        | Insufficient permissions for target | Loader      | No retry            |
+
+## 4. Expected Output
+
+### Success Response Example
+
+```json
+{
+  "success": true,
+  "result": {
+    "extractedHtml": "<html>...</html>",
+    "transformedData": [
+      {
+        "title": "Festival de la Mercè",
+        "date": "2025-09-24T10:00:00Z",
+        "location": "Plaza Catalunya",
+        "description": "Annual Barcelona festival",
+        "url": "https://example.com/event/1",
+        "category": "culture"
+      }
+    ],
+    "loadedTo": "file://output/events_2025-08-25.json"
+  },
+  "metadata": {
+    "executionTime": 15000,
+    "recordsProcessed": 150,
+    "extractorMetrics": {
+      "navigationSteps": 5,
+      "pageLoadTime": 3000
+    },
+    "transformerMetrics": {
+      "validationErrors": 0,
+      "fieldExtractionTime": 2000
+    },
+    "loaderMetrics": {
+      "uploadTime": 500,
+      "fileSize": 25600
+    }
+  }
+}
+```
+
+### Error Response Example
+
+```json
+{
+  "success": false,
+  "error": {
+    "stage": "extractor",
+    "code": "NAVIGATION_TIMEOUT",
+    "message": "Navigation step 'click[data-load-more]' timed out after 30000ms",
+    "details": {
+      "step": 3,
+      "selector": "button[data-load-more]",
+      "timeout": 30000
+    }
+  },
+  "metadata": {
+    "executionTime": 30500,
+    "recordsProcessed": 0
+  }
+}
+```
+
+## 5. Component Architecture
+
+```mermaid
+graph TB
+    A[Pipeline Orchestrator] --> B[Extractor]
+    A --> C[Transformer]
+    A --> D[Loader]
+
+    B --> E[Browser Manager]
+    B --> F[Navigation Engine]
+    F --> G[Step Executor]
+
+    C --> H[Selector Engine]
+    C --> I[Schema Validator]
+    C --> J[Field Transformer]
+
+    D --> K[Target Strategy]
+    K --> L[File Target]
+    K --> M[Spaces Target]
+    K --> N[Database Target]
+
+    O[(Config Store)] --> A
+    P[(Schema Registry)] --> I
+
+    classDef core fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef engine fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef target fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef storage fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+
+    class A,B,C,D core
+    class E,F,G,H,I,J engine
+    class L,M,N target
+    class O,P storage
+```
+
+## 6. Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Pipeline as Pipeline Orchestrator
+    participant Extractor
+    participant Browser as Browser Manager
+    participant Transformer
+    participant Validator as Schema Validator
+    participant Loader
+    participant Target as Target Strategy
+
+    Client->>Pipeline: execute(config)
+    Pipeline->>Extractor: extract(url, navigationSteps)
+
+    Extractor->>Browser: launch(browserConfig)
+    Browser-->>Extractor: browser instance
+
+    Extractor->>Browser: navigate(url)
+    Browser-->>Extractor: page loaded
+
+    loop For each navigation step
+        Extractor->>Browser: executeStep(step)
+        Browser-->>Extractor: step completed
+    end
+
+    Extractor->>Browser: getHTML()
+    Browser-->>Extractor: html content
+    Extractor-->>Pipeline: html string
+
+    Pipeline->>Transformer: transform(html, mappings)
+    Transformer->>Validator: validate(data, schema)
+
+    alt validation fails
+        Validator-->>Transformer: ValidationError
+        Transformer-->>Pipeline: TransformError
+        Pipeline-->>Client: Pipeline Error
+    else validation succeeds
+        Validator-->>Transformer: valid data
+        Transformer-->>Pipeline: structured data
+
+        Pipeline->>Loader: load(data, targetConfig)
+        Loader->>Target: write(data, config)
+        Target-->>Loader: success/failure
+        Loader-->>Pipeline: load result
+        Pipeline-->>Client: success response
+    end
+```
+
+## 7. Test Scenarios
+
+| Test Case              | Input                     | Expected Output            | Error Conditions           | Notes                    |
+| ---------------------- | ------------------------- | -------------------------- | -------------------------- | ------------------------ |
+| **Happy Path**         | Valid URL + config        | Extracted events JSON      | None                       | Standard success case    |
+| **Navigation Timeout** | Slow loading page         | Navigation timeout error   | `NAVIGATION_TIMEOUT`       | Resilience test          |
+| **Missing Elements**   | Page without events       | Empty results array        | None                       | Edge case handling       |
+| **Invalid Schema**     | Malformed field mapping   | Schema validation error    | `SCHEMA_VALIDATION_FAILED` | Configuration validation |
+| **Target Unavailable** | Offline target service    | Load failure error         | `TARGET_UNAVAILABLE`       | Error propagation        |
+| **Large Dataset**      | 1000+ events page         | All events extracted       | Potential memory issues    | Performance test         |
+| **Network Failure**    | Intermittent connectivity | Retry then success/failure | Various network errors     | Retry logic test         |
+
+### Performance Requirements
+
+- **Extraction Time:** < 30 seconds for 100+ events
+- **Memory Usage:** < 256MB peak during processing
+- **Transformation Rate:** 1000+ records/second
+- **Load Time:** < 5 seconds to any target
+
+## 8. Dependencies & Constraints
+
+### Runtime Dependencies
+
+- **Node.js:** >= 18.0.0
+- **Playwright:** ^1.40.0 (for browser automation)
+- **JSON Schema Libraries:** ajv ^8.12.0
+- **File System:** Built-in fs/promises
+- **Cloud Storage:** AWS SDK or DigitalOcean Spaces API
+
+### Build Dependencies
+
+- **TypeScript:** ^5.0.0
+- **Jest:** ^29.0.0 (testing)
+- **ESLint:** ^8.0.0 (linting)
+
+### Infrastructure Constraints
+
+- **Memory:** Minimum 512MB for browser automation
+- **CPU:** 2+ cores recommended for parallel processing
+- **Network:** Outbound HTTPS access required
+- **Storage:** Variable based on target configuration
+
+### Security Requirements
+
+- Browser automation in sandboxed environment
+- Input validation for all configuration parameters
+- Secure credential storage for cloud targets
+- Rate limiting to respect target site policies
+
+## 9. Implementation Notes
+
+### For AI Agents
+
+- **Extractor Pattern:** Use Page Object Model for navigation steps
+- **Error Handling:** Implement Result<T, E> pattern for typed error propagation
+- **Configuration:** Use builder pattern for complex configurations
+- **Testing:** Generate comprehensive unit tests for each component with mocked
+  dependencies
+- **Memory Management:** Dispose browser instances properly to prevent memory
+  leaks
+
+### Code Generation Guidelines
+
+```typescript
+// Preferred error handling pattern
+interface Result<T, E> {
+  success: boolean;
+  data?: T;
+  error?: E;
+}
+
+// Extractor implementation pattern
+async function extract(
+  config: ExtractorConfig
+): Promise<Result<string, ExtractorError>> {
+  try {
+    const browser = await launchBrowser(config);
+    const html = await performNavigation(browser, config.navigationSteps);
+    return { success: true, data: html };
+  } catch (error) {
+    return {
+      success: false,
+      error: new ExtractorError("NAVIGATION_FAILED", error.message),
+    };
+  }
+}
+```
+
+### For Developers
+
+- **Configuration Management:** Use environment variables for target-specific
+  settings
+- **Pipeline Orchestration:** Implement simple sequential execution with proper
+  error handling
+- **Monitoring:** Add structured logging with correlation IDs
+- **Schema Management:** Version control JSON schemas and validate compatibility
+
+### Monitoring Requirements
+
+- **Metrics to Track:**
+  - Pipeline execution time per stage
+  - Success/failure rates by error type
+  - Memory usage during processing
+  - Target-specific metrics (upload times, file sizes)
+- **Alerts:**
+  - Pipeline failure rate > 10%
+  - Extraction time > 60 seconds
+  - Memory usage > 80% of available
+
+## 10. Migration & Rollout
+
+### Feature Flags
+
+- `pipeline.etl.enabled` - Enable new ETL pipeline
+- `pipeline.extractor.retries.enabled` - Enable retry logic
+- `pipeline.loader.digitalocean.enabled` - Enable DigitalOcean Spaces loader
+
+### Rollout Plan
+
+1. **Phase 1:** Implement core pipeline components with file target only
+2. **Phase 2:** Add cloud storage targets and retry logic
+3. **Phase 3:** Replace existing monolithic scraper in test environment
+4. **Phase 4:** Production deployment with gradual traffic migration
+
+### Rollback Strategy
+
+- Feature flags allow instant fallback to monolithic scraper
+- Pipeline components are backwards compatible with existing configs
+- Data formats remain consistent during transition
+
+---
+
+## Metadata for Automation
+
+```yaml
+# CI/CD Integration
+build:
+  test_coverage_threshold: 95
+  performance_test_required: true
+  security_scan_required: true
+
+# Monitoring
+alerts:
+  - metric: "pipeline_failure_rate"
+    threshold: 0.10
+    duration: "5m"
+  - metric: "extraction_time"
+    threshold: 60
+    duration: "1m"
+
+# Documentation
+auto_generate:
+  - api_docs: true
+  - test_reports: true
+  - performance_reports: true
+```
