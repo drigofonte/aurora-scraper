@@ -10,8 +10,6 @@ dist/
 
 # Output files
 output/
-*.json
-*.html
 
 # Environment variables
 .env
