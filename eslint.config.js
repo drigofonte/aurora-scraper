@@ -28,24 +28,27 @@ export default [
     },
     rules: {
       // TypeScript-specific rules
-      "@typescript-eslint/no-unused-vars": ["warn", { 
-        "args": "after-used",
-        "vars": "all",
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
-      }],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          args: "after-used",
+          vars: "all",
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
       "@typescript-eslint/explicit-function-return-type": "error",
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/prefer-readonly": "warn", // Changed from error to warn
-      
+
       // Code quality rules - relaxed for now
-      "complexity": ["warn", 25], // Increased from 15 to 25
+      complexity: ["warn", 25], // Increased from 15 to 25
       "max-depth": ["error", 3],
       "max-lines-per-function": ["warn", { max: 70, skipComments: true }], // Increased from 50 to 70
       "max-params": ["error", 7],
       "prefer-const": "error",
       "no-var": "error",
-      
+
       // General rules
       "no-console": "warn", // Allow console for now
       "no-debugger": "error",
