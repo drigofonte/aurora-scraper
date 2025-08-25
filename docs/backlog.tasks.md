@@ -16,6 +16,10 @@
       should have been done before the implementation. It should complement the
       etl-pipeline-spec.md
 - [ ] Refactor all examples in the code into a docs/examples folder.
+- [ ] Review old approach and remove old implementation, including barcelona
+      extraction code, which should now be an example
+- [ ] Review the use of utils/resul.utils.ts. This really should either be named
+      something else or it should live within the extractor module
 - [ ] Research SAST tool
 - [ ] Integrate Sonarqube (or similar) checks as part of the commit pipeline
 - [ ] Integrate test coverage metrics into the commit pipeline
