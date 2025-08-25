@@ -1,0 +1,64 @@
+{
+  "$id": "https://project-aurora.com/schemas/event.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Event Schema",
+  "description": "Schema for event data extracted from event listings",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "description": "The name/title of the event"
+    },
+    "publishedDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the event was published/listed"
+    },
+    "eventDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the event takes place"
+    },
+    "location": {
+      "type": "string",
+      "description": "Where the event takes place"
+    },
+    "content": {
+      "type": "string",
+      "description": "Description or details of the event"
+    },
+    "sourceUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the event page"
+    },
+    "imageUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL of the event image"
+    },
+    "category": {
+      "type": "string",
+      "description": "Event category (cultural, sports, business, etc.)"
+    },
+    "price": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        }
+      },
+      "description": "Event price information"
+    }
+  },
+  "required": ["title"],
+  "additionalProperties": false
+}

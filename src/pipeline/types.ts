@@ -163,10 +163,25 @@ export type ExtractorErrorCode =
  * Configuration for the transformation stage
  */
 export interface TransformerConfig {
+  readonly type: TransformerType;
   readonly schema: string;
   readonly fieldMappings: Record<string, FieldMapping>;
+  readonly listConfig?: ListTransformerConfig;
   readonly validationRules?: readonly ValidationRule[];
   readonly options?: TransformerOptions;
+}
+
+/**
+ * Type of transformation (item vs list extraction)
+ */
+export type TransformerType = "item" | "list";
+
+/**
+ * Configuration for list-based transformations
+ */
+export interface ListTransformerConfig {
+  readonly containerSelector: string;
+  readonly itemSelector: string;
 }
 
 /**
@@ -193,7 +208,8 @@ export type ElementAttribute =
   | "title"
   | "alt"
   | "value"
-  | "data-*";
+  | "data-*"
+  | string; // Allow any string for custom attributes
 
 /**
  * Built-in field transformers
@@ -274,6 +290,7 @@ export type TransformerErrorCode =
   | "SCHEMA_VALIDATION_FAILED"
   | "FIELD_EXTRACTION_FAILED"
   | "SELECTOR_NOT_FOUND"
+  | "CONTAINER_NOT_FOUND"
   | "TRANSFORMATION_FAILED"
   | "REQUIRED_FIELD_MISSING";
 

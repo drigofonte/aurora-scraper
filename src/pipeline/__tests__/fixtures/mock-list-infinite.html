@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Infinite Scroll Results</title>
+  </head>
+  <body>
+    <main class="infinite-container">
+      <h1>Infinite Scroll Results</h1>
+
+      <div class="item-listing">
+        <div class="list-item">
+          <h3 class="item-title">First Item with Load More</h3>
+          <div class="item-meta">Category: Tech</div>
+          <a href="https://example.com/items/1" class="item-link">View Details</a>
+        </div>
+
+        <div class="list-item">
+          <h3 class="item-title">Second Item with Load More</h3>
+          <div class="item-meta">Category: Business</div>
+          <a href="https://example.com/items/2" class="item-link">View Details</a>
+        </div>
+
+        <div class="list-item">
+          <h3 class="item-title">Third Item with Load More</h3>
+          <div class="item-meta">Category: Science</div>
+          <a href="https://example.com/items/3" class="item-link">View Details</a>
+        </div>
+      </div>
+
+      <div class="load-more-section">
+        <button class="load-more-btn" data-page="2">Load More Items</button>
+        <div class="loading-indicator" style="display: none">Loading...</div>
+      </div>
+
+      <!-- Hidden items that would be loaded on button click -->
+      <div class="hidden-items" style="display: none">
+        <div class="list-item">
+          <h3 class="item-title">Fourth Item (Hidden)</h3>
+          <div class="item-meta">Category: Arts</div>
+          <a href="https://example.com/items/4" class="item-link">View Details</a>
+        </div>
+
+        <div class="list-item">
+          <h3 class="item-title">Fifth Item (Hidden)</h3>
+          <div class="item-meta">Category: Sports</div>
+          <a href="https://example.com/items/5" class="item-link">View Details</a>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Mock infinite scroll behavior for testing
+      document.querySelector(".load-more-btn")?.addEventListener("click", function () {
+        const hiddenItems = document.querySelector(".hidden-items");
+        const listing = document.querySelector(".item-listing");
+        if (hiddenItems && listing) {
+          listing.innerHTML += hiddenItems.innerHTML;
+          this.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

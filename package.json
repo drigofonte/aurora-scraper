@@ -23,14 +23,17 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "ajv": "^8.17.1",
+    "cheerio": "^1.1.2",
     "jsdom": "^23.0.0",
     "playwright": "^1.40.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@types/cheerio": "^0.22.35",
     "@types/jsdom": "^21.1.6",
-    "@types/node": "^20.10.0",
+    "@types/node": "^20.19.11",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
     "@vitest/coverage-v8": "^1.0.0",
@@ -48,10 +51,22 @@
     "vitest": "^1.0.0"
   },
   "lint-staged": {
-    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
-    "*.{json,md}": ["prettier --write"]
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   },
-  "keywords": ["scraping", "playwright", "typescript", "barcelona", "events", "web-scraping"],
+  "keywords": [
+    "scraping",
+    "playwright",
+    "typescript",
+    "barcelona",
+    "events",
+    "web-scraping"
+  ],
   "author": "",
   "license": "MIT",
   "engines": {

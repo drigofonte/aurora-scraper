@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>URL Pagination Results</title>
+  </head>
+  <body>
+    <main class="paginated-container">
+      <h1>URL-Based Pagination Results</h1>
+
+      <div class="results-container">
+        <div class="result-item">
+          <h2 class="item-title">URL Pagination Item 1</h2>
+          <div class="item-meta">Page 1 Content</div>
+          <a href="https://example.com/paginated/1" class="item-link">Read More</a>
+        </div>
+
+        <div class="result-item">
+          <h2 class="item-title">URL Pagination Item 2</h2>
+          <div class="item-meta">Page 1 Content</div>
+          <a href="https://example.com/paginated/2" class="item-link">Read More</a>
+        </div>
+
+        <div class="result-item">
+          <h2 class="item-title">URL Pagination Item 3</h2>
+          <div class="item-meta">Page 1 Content</div>
+          <a href="https://example.com/paginated/3" class="item-link">Read More</a>
+        </div>
+      </div>
+
+      <nav class="pagination-nav">
+        <div class="pagination-links">
+          <a href="?page=1" class="page-link current">1</a>
+          <a href="?page=2" class="page-link">2</a>
+          <a href="?page=3" class="page-link">3</a>
+          <a href="?page=2" class="page-link next">Next →</a>
+        </div>
+        <div class="pagination-info">Showing 1-3 of 9 results</div>
+      </nav>
+    </main>
+  </body>
+</html>

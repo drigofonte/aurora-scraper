@@ -1,12 +1,16 @@
 # Barcelona Events Scraper
 
-A TypeScript-based web scraper for Barcelona children's events using Playwright, built following enterprise-grade best practices.
+A TypeScript-based web scraper for Barcelona children's events using Playwright,
+built following enterprise-grade best practices.
 
 ## 🚀 Features
 
-- **Type Safety**: Full TypeScript with strict mode and comprehensive type definitions
-- **Modern Architecture**: Clean separation of concerns with Extract-Transform-Load (ETL) pattern
-- **Error Handling**: Functional error handling with Result types and custom error classes
+- **Type Safety**: Full TypeScript with strict mode and comprehensive type
+  definitions
+- **Modern Architecture**: Clean separation of concerns with
+  Extract-Transform-Load (ETL) pattern
+- **Error Handling**: Functional error handling with Result types and custom
+  error classes
 - **Configuration Management**: Environment-based configuration with validation
 - **Logging**: Structured logging with configurable levels
 - **Testing**: Comprehensive test suite with Vitest
@@ -95,6 +99,25 @@ npm run lint
 npm run type-check
 ```
 
+## 📚 Examples
+
+Comprehensive examples are available in the `docs/examples/` directory:
+
+- **[Single Item Extraction](./docs/examples/01-single-item/)** - Extract data
+  from article pages
+- **[Product List Scraping](./docs/examples/03-product-list/)** - E-commerce
+  product catalogs
+- **[All Examples](./docs/examples/)** - Complete collection with detailed
+  documentation
+
+Each example includes:
+
+- Complete runnable code
+- Step-by-step documentation
+- Sample data and expected outputs
+- Configuration explanations
+- Error handling patterns
+
 ## 🏗️ Project Architecture
 
 ### Directory Structure
@@ -134,7 +157,8 @@ scraper/
 
 ### ETL Architecture
 
-The scraper follows the **Extract-Transform-Load** pattern with clear separation of concerns:
+The scraper follows the **Extract-Transform-Load** pattern with clear separation
+of concerns:
 
 1. **Extract**: DOM-based data extraction using configurable field mappings
 2. **Transform**: Data cleaning and structuring with type safety
@@ -330,7 +354,8 @@ refactor: simplify extraction logic
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
+for details.
 
 ## 🙏 Acknowledgments
 
@@ -343,7 +368,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
 - **Documentation**: [Project Wiki](https://github.com/your-repo/wiki)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
+- **Discussions**:
+  [GitHub Discussions](https://github.com/your-repo/discussions)
 
 ---
 

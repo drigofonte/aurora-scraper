@@ -1,0 +1,56 @@
+{
+  "$id": "https://project-aurora.com/schemas/generic-item.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generic Item Schema",
+  "description": "Generic schema for any extracted item with common fields",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The title or name of the item"
+    },
+    "publishedDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Publication or creation date"
+    },
+    "content": {
+      "type": "string",
+      "description": "Main content or description"
+    },
+    "metadata": {
+      "type": "string",
+      "description": "Additional metadata information"
+    },
+    "sourceUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Source URL of the item"
+    },
+    "imageUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Associated image URL"
+    },
+    "category": {
+      "type": "string",
+      "description": "Item category or classification"
+    },
+    "numericValue": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "description": "Numeric value with unit (price, quantity, rating, etc.)"
+    }
+  },
+  "required": ["title"],
+  "additionalProperties": false
+}

@@ -58,21 +58,42 @@ export type {
   LoaderOptions,
 } from "./types.js";
 
+// Loader implementation exports
+export {
+  LoadTarget,
+  LoadConfig,
+  LoadResult,
+  FileLoader,
+  ConsoleLoader,
+  DatabaseLoader,
+  ApiLoader,
+  DataLoader,
+} from "./loader/index.js";
+
+// Orchestrator implementation exports
+export {
+  PipelineOrchestrator,
+  PipelineFactory,
+  DefaultPipelineConfig,
+  SimplePipelineMonitor,
+  createPipelineBuilder,
+  createPipelineMonitor,
+  pipelineFactory,
+  defaultPipelineConfig,
+} from "./orchestrator.js";
+
 // Pipeline orchestrator interfaces
 export type {
-  PipelineOrchestrator,
   PipelineOrchestratorConfig,
   PipelineOrchestratorOptions,
   PipelineExecutionContext,
   PipelineHealthStatus,
   ComponentHealth,
-  PipelineFactory,
   PipelineEvent,
   PipelineEventData,
   PipelineEventListener,
   PipelineMonitor,
   PipelineMetrics,
-  DefaultPipelineConfig,
   PipelineBuilder,
 } from "./orchestrator.js";
 

@@ -1,0 +1,49 @@
+{
+  "$id": "https://project-aurora.com/schemas/article.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Article Schema",
+  "description": "Schema for article data extracted from web pages",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "The main title of the article"
+    },
+    "publishedDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 formatted publication date"
+    },
+    "content": {
+      "type": "string",
+      "minLength": 10,
+      "description": "The main content/body of the article"
+    },
+    "metadata": {
+      "type": "string",
+      "description": "Additional metadata like author, category, etc."
+    },
+    "sourceUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "The canonical URL of the article"
+    },
+    "imageUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL of the featured image"
+    },
+    "category": {
+      "type": "string",
+      "description": "Article category or tag"
+    },
+    "readingTime": {
+      "type": "string",
+      "description": "Estimated reading time"
+    }
+  },
+  "required": ["title"],
+  "additionalProperties": false
+}

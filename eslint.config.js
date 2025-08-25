@@ -21,6 +21,12 @@ export default [
         __dirname: "readonly",
         __filename: "readonly",
         global: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+        setImmediate: "readonly",
+        clearImmediate: "readonly",
       },
     },
     plugins: {

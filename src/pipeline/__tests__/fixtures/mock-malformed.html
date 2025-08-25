@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malformed HTML</title>
+</head>
+<body>
+    <main class="malformed-container">
+        <h1>Malformed HTML Example</h1>
+        
+        <!-- Unclosed div -->
+        <div class="broken-container">
+            <div class="item">
+                <h2>Item with Missing Closing Tag
+                <p>Content without proper structure
+            </div>
+            
+            <!-- Missing closing tag for broken-container -->
+        
+        <!-- Invalid nesting -->
+        <span>
+            <div class="invalid-nesting">This div is inside a span</div>
+        </span>
+        
+        <!-- Broken attributes -->
+        <div class="item" data-incomplete="missing-quote>
+            <h2 class=>Empty class attribute</h2>
+            <p>Some content</p>
+        </div>
+        
+        <!-- Missing required elements -->
+        <article>
+            <!-- No title or content -->
+        </article>
+        
+    <!-- Missing closing body and html tags -->

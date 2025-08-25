@@ -110,6 +110,7 @@ export const TEST_CONFIG: PipelineConfig = {
     navigationSteps: [NAVIGATION_STEPS.waitForPageLoad()],
   },
   transformer: {
+    type: "item",
     schema: "test-event-v1",
     fieldMappings: {
       title: {
@@ -139,6 +140,11 @@ export class PipelineConfigFactory {
   static createBasicConfig(options: {
     url: string;
     schema: string;
+    type?: "item" | "list";
+    listConfig?: {
+      containerSelector: string;
+      itemSelector: string;
+    };
     fieldMappings: Record<
       string,
       {
@@ -165,7 +171,9 @@ export class PipelineConfigFactory {
 
       transformer: {
         ...BASE_TRANSFORMER_CONFIG,
+        type: options.type ?? "item",
         schema: options.schema,
+        ...(options.listConfig && { listConfig: options.listConfig }),
         fieldMappings: Object.entries(options.fieldMappings).reduce(
           (acc, [key, mapping]) => ({
             ...acc,
