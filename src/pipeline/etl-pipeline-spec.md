@@ -35,7 +35,8 @@ and extend. By implementing an ETL architecture, we can:
 
 ### Success Criteria
 
-- Process Barcelona events webpage with 100+ events in under 30 seconds
+- Process web pages with 100+ items in under 30 seconds
+- Support both single item and list extraction patterns
 - Support switching between FileTarget and DigitalOceanSpaces through
   configuration
 - Achieve 95% test coverage across all pipeline components
@@ -84,11 +85,37 @@ interface NavigationStep {
   maxAttempts?: number;
 }
 
-interface TransformerConfig {
+// Base configuration shared by both patterns
+interface BaseTransformerConfig {
   schema: string; // JSON schema name/identifier
   fieldMappings: Record<string, FieldMapping>;
   validationRules?: ValidationRule[];
 }
+
+// For single items (articles, product details, etc.)
+interface ItemTransformerConfig extends BaseTransformerConfig {
+  extractionPattern: "item";
+  // fieldMappings directly map to the single item
+}
+
+// For collections (lists, search results, etc.)
+interface ListTransformerConfig extends BaseTransformerConfig {
+  extractionPattern: "list";
+  containerSelector: string; // ".search-results", ".item-listing"
+  itemSelector: string; // ".result-item", ".list-item"
+  pagination?: PaginationConfig;
+  // fieldMappings are relative to each item within the container
+}
+
+interface PaginationConfig {
+  strategy: "click" | "scroll" | "url-pattern";
+  selector?: string; // for click strategy
+  maxPages?: number;
+  waitCondition?: string; // selector to wait for after pagination
+}
+
+// Discriminated union
+type TransformerConfig = ItemTransformerConfig | ListTransformerConfig;
 
 interface FieldMapping {
   selector: string;
@@ -101,6 +128,59 @@ interface LoaderConfig {
   target: "file" | "digitalocean-spaces" | "database";
   targetConfig: FileTargetConfig | SpacesTargetConfig | DatabaseTargetConfig;
 }
+```
+
+### Configuration Examples
+
+#### Item Extraction Configuration
+
+```typescript
+// Example: Extracting a single article page
+const articleExtractionConfig: ItemTransformerConfig = {
+  extractionPattern: "item",
+  schema: "article",
+  fieldMappings: {
+    title: { selector: "h1.main-title", attribute: "text", required: true },
+    publishedDate: {
+      selector: "time.publish-date",
+      attribute: "datetime",
+      transformer: "date",
+    },
+    content: { selector: ".article-content", attribute: "text" },
+    metadata: { selector: ".article-author", attribute: "text" },
+    sourceUrl: { selector: "link[rel='canonical']", attribute: "href" },
+    imageUrl: { selector: ".featured-image img", attribute: "src" },
+  },
+  validationRules: [
+    { field: "title", minLength: 5 },
+    { field: "content", minLength: 100 },
+  ],
+};
+```
+
+#### List Extraction Configuration
+
+```typescript
+// Example: Extracting a list of search results with pagination
+const searchResultsConfig: ListTransformerConfig = {
+  extractionPattern: "list",
+  schema: "search-result",
+  containerSelector: ".search-results",
+  itemSelector: ".result-item",
+  fieldMappings: {
+    title: { selector: ".result-title a", attribute: "text", required: true },
+    metadata: { selector: ".result-meta", attribute: "text" },
+    sourceUrl: { selector: ".result-title a", attribute: "href" },
+    content: { selector: ".result-snippet", attribute: "text" },
+  },
+  pagination: {
+    strategy: "click",
+    selector: "button.load-more",
+    maxPages: 5,
+    waitCondition: ".result-item:last-child",
+  },
+  validationRules: [{ field: "title", minLength: 3 }],
+};
 ```
 
 ### Output Contract
@@ -139,25 +219,25 @@ interface PipelineMetadata {
 
 ```json
 {
-  "$id": "https://example.com/schemas/ScrapedEvent.json",
+  "$id": "https://example.com/schemas/GenericItem.json",
   "type": "object",
   "properties": {
     "title": { "type": "string", "minLength": 1 },
-    "date": { "type": "string", "format": "date-time" },
-    "location": { "type": "string" },
-    "description": { "type": "string" },
-    "url": { "type": "string", "format": "uri" },
+    "publishedDate": { "type": "string", "format": "date-time" },
+    "content": { "type": "string" },
+    "metadata": { "type": "string" },
+    "sourceUrl": { "type": "string", "format": "uri" },
     "imageUrl": { "type": "string", "format": "uri" },
     "category": { "type": "string" },
-    "price": {
+    "numericValue": {
       "type": "object",
       "properties": {
         "amount": { "type": "number", "minimum": 0 },
-        "currency": { "type": "string", "enum": ["EUR", "USD"] }
+        "unit": { "type": "string" }
       }
     }
   },
-  "required": ["title", "date"],
+  "required": ["title"],
   "additionalProperties": false
 }
 ```
@@ -168,8 +248,11 @@ interface PipelineMetadata {
 | -------------------------- | ----------------------------------- | ----------- | ------------------- |
 | `NAVIGATION_TIMEOUT`       | Navigation step exceeded timeout    | Extractor   | Exponential backoff |
 | `ELEMENT_NOT_FOUND`        | Required selector not found         | Extractor   | Linear retry        |
+| `CONTAINER_NOT_FOUND`      | List container selector not found   | Extractor   | Linear retry        |
+| `PAGINATION_FAILED`        | Pagination step failed              | Extractor   | Linear retry        |
 | `INVALID_HTML`             | Extracted HTML is malformed         | Transformer | No retry            |
 | `SCHEMA_VALIDATION_FAILED` | Output doesn't match schema         | Transformer | No retry            |
+| `EXTRACTION_PATTERN_ERROR` | Invalid extraction pattern config   | Transformer | No retry            |
 | `TARGET_UNAVAILABLE`       | Cannot reach target destination     | Loader      | Exponential backoff |
 | `PERMISSION_DENIED`        | Insufficient permissions for target | Loader      | No retry            |
 
@@ -184,30 +267,40 @@ interface PipelineMetadata {
     "extractedHtml": "<html>...</html>",
     "transformedData": [
       {
-        "title": "Festival de la Mercè",
-        "date": "2025-09-24T10:00:00Z",
-        "location": "Plaza Catalunya",
-        "description": "Annual Barcelona festival",
-        "url": "https://example.com/event/1",
-        "category": "culture"
+        "title": "Sample Article Title",
+        "publishedDate": "2025-08-24T14:30:00Z",
+        "content": "Article content goes here...",
+        "metadata": "Technology",
+        "sourceUrl": "https://example.com/article/1",
+        "category": "news"
+      },
+      {
+        "title": "Another Item Title",
+        "publishedDate": "2025-08-25T09:15:00Z",
+        "content": "Second item content...",
+        "metadata": "Business",
+        "sourceUrl": "https://example.com/article/2",
+        "category": "news"
       }
     ],
-    "loadedTo": "file://output/events_2025-08-25.json"
+    "loadedTo": "file://output/extracted_items_2025-08-25.json"
   },
   "metadata": {
     "executionTime": 15000,
-    "recordsProcessed": 150,
+    "recordsProcessed": 42,
     "extractorMetrics": {
-      "navigationSteps": 5,
-      "pageLoadTime": 3000
+      "navigationSteps": 3,
+      "pageLoadTime": 2800,
+      "paginationSteps": 2
     },
     "transformerMetrics": {
       "validationErrors": 0,
-      "fieldExtractionTime": 2000
+      "fieldExtractionTime": 1800,
+      "extractionPattern": "list"
     },
     "loaderMetrics": {
-      "uploadTime": 500,
-      "fileSize": 25600
+      "uploadTime": 450,
+      "fileSize": 18400
     }
   }
 }
@@ -220,17 +313,18 @@ interface PipelineMetadata {
   "success": false,
   "error": {
     "stage": "extractor",
-    "code": "NAVIGATION_TIMEOUT",
-    "message": "Navigation step 'click[data-load-more]' timed out after 30000ms",
+    "code": "PAGINATION_FAILED",
+    "message": "Pagination step 'click[.load-more-btn]' failed after 3 attempts",
     "details": {
-      "step": 3,
-      "selector": "button[data-load-more]",
-      "timeout": 30000
+      "step": 2,
+      "selector": "button.load-more-btn",
+      "attempts": 3,
+      "lastError": "Element not clickable"
     }
   },
   "metadata": {
-    "executionTime": 30500,
-    "recordsProcessed": 0
+    "executionTime": 45000,
+    "recordsProcessed": 25
   }
 }
 ```
@@ -322,19 +416,35 @@ sequenceDiagram
 
 ## 7. Test Scenarios
 
-| Test Case              | Input                     | Expected Output            | Error Conditions           | Notes                    |
-| ---------------------- | ------------------------- | -------------------------- | -------------------------- | ------------------------ |
-| **Happy Path**         | Valid URL + config        | Extracted events JSON      | None                       | Standard success case    |
-| **Navigation Timeout** | Slow loading page         | Navigation timeout error   | `NAVIGATION_TIMEOUT`       | Resilience test          |
-| **Missing Elements**   | Page without events       | Empty results array        | None                       | Edge case handling       |
-| **Invalid Schema**     | Malformed field mapping   | Schema validation error    | `SCHEMA_VALIDATION_FAILED` | Configuration validation |
-| **Target Unavailable** | Offline target service    | Load failure error         | `TARGET_UNAVAILABLE`       | Error propagation        |
-| **Large Dataset**      | 1000+ events page         | All events extracted       | Potential memory issues    | Performance test         |
-| **Network Failure**    | Intermittent connectivity | Retry then success/failure | Various network errors     | Retry logic test         |
+### Mock HTML Test Fixtures
+
+The pipeline should be tested against standardized mock HTML files that
+represent common extraction patterns:
+
+- **`mock-item.html`**: Single item extraction (article, product detail)
+- **`mock-list-basic.html`**: Simple list with static pagination
+- **`mock-list-infinite.html`**: List with infinite scroll/load more
+- **`mock-list-url-pagination.html`**: List with URL-based pagination
+- **`mock-empty-list.html`**: Container exists but no items
+- **`mock-malformed.html`**: Invalid/incomplete HTML structure
+
+| Test Case              | Input                         | Expected Output            | Error Conditions           | Notes                    |
+| ---------------------- | ----------------------------- | -------------------------- | -------------------------- | ------------------------ |
+| **Item Extraction**    | mock-item.html + item config  | Single item JSON           | None                       | Basic singleton pattern  |
+| **List Extraction**    | mock-list-basic.html + config | Multiple items JSON array  | None                       | Basic collection pattern |
+| **Pagination Click**   | mock-list-infinite.html       | All paginated items        | None                       | Load more button test    |
+| **Infinite Scroll**    | mock-list-infinite.html       | Progressive loading        | None                       | Scroll-based pagination  |
+| **Empty Container**    | mock-empty-list.html          | Empty results array        | None                       | Edge case handling       |
+| **Missing Container**  | mock-item.html + list config  | Container not found error  | `CONTAINER_NOT_FOUND`      | Configuration mismatch   |
+| **Navigation Timeout** | Slow loading mock page        | Navigation timeout error   | `NAVIGATION_TIMEOUT`       | Resilience test          |
+| **Invalid Schema**     | Malformed field mapping       | Schema validation error    | `SCHEMA_VALIDATION_FAILED` | Configuration validation |
+| **Target Unavailable** | Offline target service        | Load failure error         | `TARGET_UNAVAILABLE`       | Error propagation        |
+| **Large Dataset**      | 1000+ items mock page         | All items extracted        | Potential memory issues    | Performance test         |
+| **Network Failure**    | Intermittent connectivity     | Retry then success/failure | Various network errors     | Retry logic test         |
 
 ### Performance Requirements
 
-- **Extraction Time:** < 30 seconds for 100+ events
+- **Extraction Time:** < 30 seconds for 100+ items
 - **Memory Usage:** < 256MB peak during processing
 - **Transformation Rate:** 1000+ records/second
 - **Load Time:** < 5 seconds to any target
@@ -390,6 +500,36 @@ interface Result<T, E> {
   data?: T;
   error?: E;
 }
+
+// Item extraction configuration example
+const itemConfig: ItemTransformerConfig = {
+  extractionPattern: "item",
+  schema: "article",
+  fieldMappings: {
+    title: { selector: "h1.article-title", attribute: "text" },
+    publishedDate: { selector: "time.published", transformer: "date" },
+    content: { selector: ".article-body", attribute: "text" },
+  },
+};
+
+// List extraction configuration example
+const listConfig: ListTransformerConfig = {
+  extractionPattern: "list",
+  schema: "search-result",
+  containerSelector: ".results-container",
+  itemSelector: ".result-item",
+  fieldMappings: {
+    title: { selector: ".item-title", attribute: "text" },
+    metadata: { selector: ".item-meta", attribute: "text" },
+    sourceUrl: { selector: ".item-link", attribute: "href" },
+  },
+  pagination: {
+    strategy: "click",
+    selector: ".load-more-btn",
+    maxPages: 10,
+    waitCondition: ".result-item",
+  },
+};
 
 // Extractor implementation pattern
 async function extract(
