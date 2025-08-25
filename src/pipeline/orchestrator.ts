@@ -55,21 +55,21 @@ export interface PipelineOrchestrator extends Pipeline {
   /**
    * Execute the complete ETL pipeline
    */
-  execute(config: PipelineConfig): Promise<Result<PipelineResult, PipelineError>>;
+  execute(_config: PipelineConfig): Promise<Result<PipelineResult, PipelineError>>;
 
   /**
    * Execute individual pipeline stage (for testing/debugging)
    */
   executeStage<T>(
-    stage: PipelineStage,
-    input: unknown,
-    config: unknown
+    _stage: PipelineStage,
+    _input: unknown,
+    _config: unknown
   ): Promise<Result<T, PipelineError>>;
 
   /**
    * Validate pipeline configuration
    */
-  validateConfig(config: PipelineConfig): Result<void, PipelineError>;
+  validateConfig(_config: PipelineConfig): Result<void, PipelineError>;
 
   /**
    * Get pipeline health status
@@ -116,22 +116,22 @@ export interface PipelineFactory {
   /**
    * Create a pipeline orchestrator with custom implementations
    */
-  create(config: PipelineOrchestratorConfig): PipelineOrchestrator;
+  create(_config: PipelineOrchestratorConfig): PipelineOrchestrator;
 
   /**
    * Create an extractor instance
    */
-  createExtractor(type: "playwright" | "puppeteer" | "cheerio"): Extractor;
+  createExtractor(_type: "playwright" | "puppeteer" | "cheerio"): Extractor;
 
   /**
    * Create a transformer instance
    */
-  createTransformer(type: "cheerio" | "jsdom"): Transformer;
+  createTransformer(_type: "cheerio" | "jsdom"): Transformer;
 
   /**
    * Create a loader instance
    */
-  createLoader(type: "file" | "digitalocean-spaces" | "aws-s3" | "database"): Loader;
+  createLoader(_type: "file" | "digitalocean-spaces" | "aws-s3" | "database"): Loader;
 }
 
 /**
@@ -161,7 +161,7 @@ export interface PipelineEventData {
 /**
  * Pipeline event listener
  */
-export type PipelineEventListener = (event: PipelineEventData) => void | Promise<void>;
+export type PipelineEventListener = (_event: PipelineEventData) => void | Promise<void>;
 
 /**
  * Pipeline monitoring interface
@@ -170,17 +170,17 @@ export interface PipelineMonitor {
   /**
    * Subscribe to pipeline events
    */
-  on(event: PipelineEvent, listener: PipelineEventListener): void;
+  on(_event: PipelineEvent, _listener: PipelineEventListener): void;
 
   /**
    * Unsubscribe from pipeline events
    */
-  off(event: PipelineEvent, listener: PipelineEventListener): void;
+  off(_event: PipelineEvent, _listener: PipelineEventListener): void;
 
   /**
    * Emit a pipeline event
    */
-  emit(event: PipelineEvent, data: Omit<PipelineEventData, "event" | "timestamp">): void;
+  emit(_event: PipelineEvent, _data: Omit<PipelineEventData, "event" | "timestamp">): void;
 
   /**
    * Get pipeline metrics
@@ -210,19 +210,41 @@ export interface PipelineMetrics {
  */
 export interface DefaultPipelineConfig {
   /**
-   * Create default configuration for Barcelona events scraper
-   */
-  barcelonaEvents(): PipelineConfig;
-
-  /**
-   * Create default configuration for generic event scraping
-   */
-  genericEvents(url: string): PipelineConfig;
-
-  /**
    * Create test configuration for development
    */
-  test(): PipelineConfig;
+  test(_url?: string): PipelineConfig;
+
+  /**
+   * Create basic configuration for any URL
+   */
+  basic(_options: {
+    url: string;
+    schema: string;
+    fieldMappings: Record<
+      string,
+      {
+        selector: string;
+        attribute?: string;
+        transformer?: string;
+        required?: boolean;
+      }
+    >;
+  }): PipelineConfig;
+
+  /**
+   * Create event scraping configuration
+   */
+  events(_options: {
+    url: string;
+    containerSelector: string;
+    titleSelector: string;
+    urlSelector?: string;
+    descriptionSelector?: string;
+    dateSelector?: string;
+    locationSelector?: string;
+    imageSelector?: string;
+    categorySelector?: string;
+  }): PipelineConfig;
 }
 
 /**
@@ -232,27 +254,27 @@ export interface PipelineBuilder {
   /**
    * Set extractor configuration
    */
-  withExtractor(config: unknown): PipelineBuilder;
+  withExtractor(_config: unknown): PipelineBuilder;
 
   /**
    * Set transformer configuration
    */
-  withTransformer(config: unknown): PipelineBuilder;
+  withTransformer(_config: unknown): PipelineBuilder;
 
   /**
    * Set loader configuration
    */
-  withLoader(config: unknown): PipelineBuilder;
+  withLoader(_config: unknown): PipelineBuilder;
 
   /**
    * Add monitoring
    */
-  withMonitoring(monitor: PipelineMonitor): PipelineBuilder;
+  withMonitoring(_monitor: PipelineMonitor): PipelineBuilder;
 
   /**
    * Set options
    */
-  withOptions(options: PipelineOrchestratorOptions): PipelineBuilder;
+  withOptions(_options: PipelineOrchestratorOptions): PipelineBuilder;
 
   /**
    * Build the pipeline

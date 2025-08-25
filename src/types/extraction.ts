@@ -63,7 +63,7 @@ export interface DataValidator<T> {
    * @param data - The data to validate
    * @returns True if data is valid
    */
-  validate(data: T): ValidationResult;
+  validate(_data: T): ValidationResult;
 
   /**
    * Returns validation errors if any

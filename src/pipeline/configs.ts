@@ -1,5 +1,5 @@
 /**
- * Default pipeline configurations for common scraping scenarios
+ * Pipeline configuration utilities and factory functions for creating reusable configurations
  */
 
 import type {
@@ -7,198 +7,94 @@ import type {
   FileTargetConfig,
   SpacesTargetConfig,
   ConsoleTargetConfig,
+  ExtractorConfig,
+  TransformerConfig,
+  LoaderConfig,
+  NavigationStep,
 } from "./types.js";
 
 /**
- * Default configuration for Barcelona events scraping
+ * Base configuration templates for common use cases
  */
-export const BARCELONA_EVENTS_CONFIG: PipelineConfig = {
-  extractor: {
-    url: "https://www.barcelona.cat/es/vivir-en-bcn/con-ninos-y-ninas/agenda",
-    browserConfig: {
-      headless: false,
-      viewport: {
-        width: 1280,
-        height: 800,
-      },
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+export const BASE_EXTRACTOR_CONFIG: Partial<ExtractorConfig> = {
+  browserConfig: {
+    headless: true,
+    viewport: {
+      width: 1280,
+      height: 800,
     },
-    timeout: 60000,
-    navigationSteps: [
-      {
-        type: "wait",
-        waitCondition: {
-          type: "load",
-        },
-        timeout: 5000,
-        description: "Wait for initial page load",
-      },
-      {
-        type: "click",
-        selector: "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll",
-        timeout: 3000,
-        maxAttempts: 1,
-        description: "Accept cookies if banner appears",
-      },
-      {
-        type: "click",
-        selector: 'button[data-api*="show_more"]',
-        maxAttempts: 20,
-        timeout: 2000,
-        description: 'Click "Ver más" button to load more events',
-      },
-      {
-        type: "wait",
-        waitCondition: {
-          type: "timeout",
-          value: 1000,
-        },
-        description: "Wait for content to stabilize",
-      },
-    ],
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+  },
+  timeout: 30000,
+  retries: {
+    count: 3,
+    delay: 1000,
+    backoff: "exponential",
+    maxDelay: 10000,
+  },
+};
+
+export const BASE_TRANSFORMER_CONFIG: Partial<TransformerConfig> = {
+  validationRules: [],
+  options: {
+    strictValidation: false,
+    allowAdditionalFields: false,
+    locale: "en-US",
+  },
+};
+
+export const BASE_LOADER_CONFIG: Partial<LoaderConfig> = {
+  options: {
+    timeout: 10000,
     retries: {
       count: 3,
       delay: 1000,
-      backoff: "exponential",
-      maxDelay: 10000,
-    },
-  },
-  transformer: {
-    schema: "barcelona-event-v1",
-    fieldMappings: {
-      title: {
-        selector: "a.ajuntament-guia-item-name",
-        attribute: "text",
-        transformer: "trim",
-        required: true,
-      },
-      url: {
-        selector: "a.ajuntament-guia-item-name",
-        attribute: "href",
-        transformer: "url",
-        required: true,
-      },
-      description: {
-        selector: "p.ajuntament-guia-item-excerpt",
-        attribute: "text",
-        transformer: "trim",
-        required: false,
-      },
-      category: {
-        selector: "strong",
-        attribute: "text",
-        transformer: "trim",
-        required: false,
-      },
-      when: {
-        selector: "li.ajuntament-guia-item-when",
-        attribute: "text",
-        transformer: "date",
-        required: false,
-      },
-      where: {
-        selector: "li.ajuntament-guia-item-where",
-        attribute: "text",
-        transformer: "trim",
-        required: false,
-      },
-      location: {
-        selector: "li.ajuntament-guia-item-where a",
-        attribute: "text",
-        transformer: "trim",
-        required: false,
-      },
-      image: {
-        selector: "img",
-        attribute: "src",
-        transformer: "url",
-        required: false,
-      },
-    },
-    validationRules: [
-      {
-        field: "title",
-        rule: "required",
-        message: "Event title is required",
-      },
-      {
-        field: "title",
-        rule: "minLength",
-        value: 3,
-        message: "Event title must be at least 3 characters",
-      },
-      {
-        field: "url",
-        rule: "url",
-        message: "Event URL must be a valid URL",
-      },
-    ],
-    options: {
-      strictValidation: false,
-      allowAdditionalFields: false,
-      dateFormat: "DD/MM/YYYY",
-      locale: "es-ES",
-    },
-  },
-  loader: {
-    target: "file",
-    targetConfig: {
-      type: "file",
-      path: "output/barcelona_events.json",
-      format: "json",
-      encoding: "utf8",
-      createDirectory: true,
-    } as FileTargetConfig,
-    options: {
-      timeout: 10000,
-      retries: {
-        count: 3,
-        delay: 1000,
-        backoff: "linear",
-      },
+      backoff: "linear",
     },
   },
 };
 
 /**
- * Production configuration with DigitalOcean Spaces
+ * Common navigation step templates
  */
-export const BARCELONA_EVENTS_PRODUCTION_CONFIG: PipelineConfig = {
-  ...BARCELONA_EVENTS_CONFIG,
-  extractor: {
-    ...BARCELONA_EVENTS_CONFIG.extractor,
-    browserConfig: {
-      ...BARCELONA_EVENTS_CONFIG.extractor.browserConfig,
-      headless: true, // Run headless in production
-    },
-  },
-  loader: {
-    target: "digitalocean-spaces",
-    targetConfig: {
-      type: "digitalocean-spaces",
-      endpoint: "https://fra1.digitaloceanspaces.com",
-      region: "fra1",
-      bucket: "project-aurora-data",
-      key: `events/barcelona/${new Date().toISOString().split("T")[0]}/events.json`,
-      accessKeyId: process.env.DO_SPACES_ACCESS_KEY_ID || "",
-      secretAccessKey: process.env.DO_SPACES_SECRET_ACCESS_KEY || "",
-      acl: "public-read",
-    } as SpacesTargetConfig,
-    options: {
-      timeout: 30000,
-      compression: "gzip",
-      retries: {
-        count: 5,
-        delay: 2000,
-        backoff: "exponential",
-        maxDelay: 30000,
-      },
-    },
-  },
+export const NAVIGATION_STEPS = {
+  waitForPageLoad: (timeout = 5000): NavigationStep => ({
+    type: "wait",
+    waitCondition: { type: "load" },
+    timeout,
+    description: "Wait for page load",
+  }),
+
+  waitForTimeout: (value: number, description?: string): NavigationStep => ({
+    type: "wait",
+    waitCondition: { type: "timeout", value },
+    description: description ?? `Wait for ${value}ms`,
+  }),
+
+  clickElement: (
+    selector: string,
+    options?: {
+      maxAttempts?: number;
+      timeout?: number;
+      description?: string;
+    }
+  ): NavigationStep => ({
+    type: "click",
+    selector,
+    maxAttempts: options?.maxAttempts ?? 1,
+    timeout: options?.timeout ?? 3000,
+    description: options?.description ?? `Click ${selector}`,
+  }),
+
+  scrollToBottom: (timeout = 1000): NavigationStep => ({
+    type: "scroll",
+    timeout,
+    description: "Scroll to bottom of page",
+  }),
 };
 
 /**
- * Test configuration for development
+ * Test configuration for development and testing
  */
 export const TEST_CONFIG: PipelineConfig = {
   extractor: {
@@ -211,16 +107,7 @@ export const TEST_CONFIG: PipelineConfig = {
       },
     },
     timeout: 10000,
-    navigationSteps: [
-      {
-        type: "wait",
-        waitCondition: {
-          type: "load",
-        },
-        timeout: 5000,
-        description: "Wait for page load",
-      },
-    ],
+    navigationSteps: [NAVIGATION_STEPS.waitForPageLoad()],
   },
   transformer: {
     schema: "test-event-v1",
@@ -243,109 +130,330 @@ export const TEST_CONFIG: PipelineConfig = {
 };
 
 /**
- * Configuration factory functions
+ * Configuration factory functions for creating reusable pipeline configurations
  */
 export class PipelineConfigFactory {
   /**
-   * Create configuration for Barcelona events scraping
+   * Create basic web scraping configuration
    */
-  static barcelonaEvents(options?: { headless?: boolean; outputPath?: string }): PipelineConfig {
-    const config: PipelineConfig = {
-      ...BARCELONA_EVENTS_CONFIG,
-      extractor: {
-        ...BARCELONA_EVENTS_CONFIG.extractor,
-        browserConfig: {
-          ...BARCELONA_EVENTS_CONFIG.extractor.browserConfig,
-          headless: options?.headless ?? BARCELONA_EVENTS_CONFIG.extractor.browserConfig.headless,
-        },
-      },
-      loader: {
-        ...BARCELONA_EVENTS_CONFIG.loader,
-        targetConfig: {
-          ...BARCELONA_EVENTS_CONFIG.loader.targetConfig,
-          path:
-            options?.outputPath ??
-            (BARCELONA_EVENTS_CONFIG.loader.targetConfig as FileTargetConfig).path,
-        } as FileTargetConfig,
-      },
-    };
-
-    return config;
-  }
-
-  /**
-   * Create production configuration with cloud storage
-   */
-  static barcelonaEventsProduction(spaces: {
-    endpoint: string;
-    region: string;
-    bucket: string;
-    accessKeyId: string;
-    secretAccessKey: string;
-  }): PipelineConfig {
-    const config = { ...BARCELONA_EVENTS_PRODUCTION_CONFIG };
-
-    const spacesConfig = config.loader.targetConfig as SpacesTargetConfig;
-    Object.assign(spacesConfig, spaces);
-
-    return config;
-  }
-
-  /**
-   * Create generic event scraping configuration
-   */
-  static genericEvents(options: {
+  static createBasicConfig(options: {
     url: string;
-    containerSelector: string;
-    fieldMappings: Record<string, { selector: string; attribute?: string }>;
+    schema: string;
+    fieldMappings: Record<
+      string,
+      {
+        selector: string;
+        attribute?: string;
+        transformer?: string;
+        required?: boolean;
+      }
+    >;
+    navigationSteps?: NavigationStep[];
     outputPath?: string;
+    headless?: boolean;
   }): PipelineConfig {
     return {
       extractor: {
+        ...BASE_EXTRACTOR_CONFIG,
         url: options.url,
         browserConfig: {
-          headless: true,
-          viewport: { width: 1280, height: 800 },
+          ...BASE_EXTRACTOR_CONFIG.browserConfig!,
+          headless: options.headless ?? true,
         },
-        timeout: 30000,
-        navigationSteps: [
-          {
-            type: "wait",
-            waitCondition: { type: "load" },
-            timeout: 5000,
-          },
-        ],
-      },
+        navigationSteps: options.navigationSteps ?? [NAVIGATION_STEPS.waitForPageLoad()],
+      } as ExtractorConfig,
+
       transformer: {
-        schema: "generic-event-v1",
+        ...BASE_TRANSFORMER_CONFIG,
+        schema: options.schema,
         fieldMappings: Object.entries(options.fieldMappings).reduce(
           (acc, [key, mapping]) => ({
             ...acc,
             [key]: {
               selector: mapping.selector,
-              attribute: mapping.attribute || "text",
-              transformer: "trim",
-              required: key === "title",
+              attribute: mapping.attribute ?? "text",
+              transformer: mapping.transformer ?? "trim",
+              required: mapping.required ?? false,
             },
           }),
           {}
         ),
-      },
+      } as TransformerConfig,
+
       loader: {
+        ...BASE_LOADER_CONFIG,
         target: "file",
         targetConfig: {
           type: "file",
-          path: options.outputPath || "output/events.json",
+          path: options.outputPath ?? "output/scraped_data.json",
           format: "json",
           encoding: "utf8",
           createDirectory: true,
         } as FileTargetConfig,
+      } as LoaderConfig,
+    };
+  }
+
+  /**
+   * Create configuration with DigitalOcean Spaces target
+   */
+  static createCloudConfig(options: {
+    url: string;
+    schema: string;
+    fieldMappings: Record<
+      string,
+      {
+        selector: string;
+        attribute?: string;
+        transformer?: string;
+        required?: boolean;
+      }
+    >;
+    navigationSteps?: NavigationStep[];
+    spaces: {
+      endpoint: string;
+      region: string;
+      bucket: string;
+      key: string;
+      accessKeyId: string;
+      secretAccessKey: string;
+      acl?: string;
+    };
+    headless?: boolean;
+  }): PipelineConfig {
+    const baseConfig = this.createBasicConfig({
+      url: options.url,
+      schema: options.schema,
+      fieldMappings: options.fieldMappings,
+      ...(options.navigationSteps && { navigationSteps: options.navigationSteps }),
+      headless: options.headless ?? true,
+    });
+
+    return {
+      ...baseConfig,
+      loader: {
+        target: "digitalocean-spaces",
+        targetConfig: {
+          type: "digitalocean-spaces",
+          endpoint: options.spaces.endpoint,
+          region: options.spaces.region,
+          bucket: options.spaces.bucket,
+          key: options.spaces.key,
+          accessKeyId: options.spaces.accessKeyId,
+          secretAccessKey: options.spaces.secretAccessKey,
+          acl: options.spaces.acl ?? "public-read",
+        } as SpacesTargetConfig,
+        options: {
+          timeout: 30000,
+          compression: "gzip",
+          retries: {
+            count: 5,
+            delay: 2000,
+            backoff: "exponential",
+            maxDelay: 30000,
+          },
+        },
       },
     };
   }
 
   /**
-   * Create test configuration
+   * Create configuration with console output (for testing)
+   */
+  static createTestConfig(options: {
+    url: string;
+    schema: string;
+    fieldMappings: Record<
+      string,
+      {
+        selector: string;
+        attribute?: string;
+        transformer?: string;
+        required?: boolean;
+      }
+    >;
+    navigationSteps?: NavigationStep[];
+    headless?: boolean;
+  }): PipelineConfig {
+    const baseConfig = this.createBasicConfig({
+      url: options.url,
+      schema: options.schema,
+      fieldMappings: options.fieldMappings,
+      ...(options.navigationSteps && { navigationSteps: options.navigationSteps }),
+      headless: options.headless ?? true,
+    });
+
+    return {
+      ...baseConfig,
+      loader: {
+        target: "console",
+        targetConfig: {
+          type: "console",
+          format: "json",
+          pretty: true,
+        } as ConsoleTargetConfig,
+        options: {
+          timeout: 5000,
+        },
+      },
+    };
+  }
+
+  /**
+   * Build field mappings for event scraping configuration
+   */
+  private static buildEventFieldMappings(options: {
+    titleSelector: string;
+    urlSelector?: string;
+    descriptionSelector?: string;
+    dateSelector?: string;
+    locationSelector?: string;
+    imageSelector?: string;
+    categorySelector?: string;
+  }): Record<
+    string,
+    {
+      selector: string;
+      attribute?: string;
+      transformer?: string;
+      required?: boolean;
+    }
+  > {
+    const fieldMappings = this.buildRequiredFieldMappings(options);
+    this.addOptionalFieldMappings(fieldMappings, options);
+    return fieldMappings;
+  }
+
+  /**
+   * Build required field mappings
+   */
+  private static buildRequiredFieldMappings(options: { titleSelector: string }): Record<
+    string,
+    {
+      selector: string;
+      attribute?: string;
+      transformer?: string;
+      required?: boolean;
+    }
+  > {
+    return {
+      title: {
+        selector: options.titleSelector,
+        attribute: "text",
+        transformer: "trim",
+        required: true,
+      },
+    };
+  }
+
+  /**
+   * Add optional field mappings to existing mappings
+   */
+  private static addOptionalFieldMappings(
+    fieldMappings: Record<
+      string,
+      {
+        selector: string;
+        attribute?: string;
+        transformer?: string;
+        required?: boolean;
+      }
+    >,
+    options: {
+      urlSelector?: string;
+      descriptionSelector?: string;
+      dateSelector?: string;
+      locationSelector?: string;
+      imageSelector?: string;
+      categorySelector?: string;
+    }
+  ): void {
+    if (options.urlSelector) {
+      fieldMappings.url = {
+        selector: options.urlSelector,
+        attribute: "href",
+        transformer: "url",
+        required: false,
+      };
+    }
+
+    if (options.descriptionSelector) {
+      fieldMappings.description = {
+        selector: options.descriptionSelector,
+        attribute: "text",
+        transformer: "trim",
+        required: false,
+      };
+    }
+
+    if (options.dateSelector) {
+      fieldMappings.date = {
+        selector: options.dateSelector,
+        attribute: "text",
+        transformer: "date",
+        required: false,
+      };
+    }
+
+    if (options.locationSelector) {
+      fieldMappings.location = {
+        selector: options.locationSelector,
+        attribute: "text",
+        transformer: "trim",
+        required: false,
+      };
+    }
+
+    if (options.imageSelector) {
+      fieldMappings.image = {
+        selector: options.imageSelector,
+        attribute: "src",
+        transformer: "url",
+        required: false,
+      };
+    }
+
+    if (options.categorySelector) {
+      fieldMappings.category = {
+        selector: options.categorySelector,
+        attribute: "text",
+        transformer: "trim",
+        required: false,
+      };
+    }
+  }
+
+  /**
+   * Create configuration for event scraping with common patterns
+   */
+  static createEventScrapingConfig(options: {
+    url: string;
+    containerSelector: string;
+    titleSelector: string;
+    urlSelector?: string;
+    descriptionSelector?: string;
+    dateSelector?: string;
+    locationSelector?: string;
+    imageSelector?: string;
+    categorySelector?: string;
+    navigationSteps?: NavigationStep[];
+    outputPath?: string;
+    headless?: boolean;
+  }): PipelineConfig {
+    const fieldMappings = this.buildEventFieldMappings(options);
+
+    return this.createBasicConfig({
+      url: options.url,
+      schema: "event-v1",
+      fieldMappings,
+      navigationSteps: options.navigationSteps ?? [NAVIGATION_STEPS.waitForPageLoad()],
+      outputPath: options.outputPath ?? "output/events.json",
+      headless: options.headless ?? true,
+    });
+  }
+
+  /**
+   * Create minimal test configuration
    */
   static test(url?: string): PipelineConfig {
     return {

@@ -17,11 +17,11 @@ export class Ok<T> {
 
   public constructor(public readonly value: T) {}
 
-  public map<U>(fn: (value: T) => U): Result<U, never> {
+  public map<U>(fn: (_value: T) => U): Result<U, never> {
     return new Ok(fn(this.value));
   }
 
-  public flatMap<U, E>(fn: (value: T) => Result<U, E>): Result<U, E> {
+  public flatMap<U, E>(fn: (_value: T) => Result<U, E>): Result<U, E> {
     return fn(this.value);
   }
 
@@ -49,7 +49,7 @@ export class Ok<T> {
     throw new Error(_message);
   }
 
-  public match<U>(handlers: { ok: (value: T) => U; err: (error: never) => U }): U {
+  public match<U>(handlers: { ok: (_value: T) => U; err: (_error: never) => U }): U {
     return handlers.ok(this.value);
   }
 }
@@ -71,7 +71,7 @@ export class Err<E> {
     return this as unknown as Result<U, E | F>;
   }
 
-  public mapErr<F>(fn: (error: E) => F): Result<never, F> {
+  public mapErr<F>(fn: (_error: E) => F): Result<never, F> {
     return new Err(fn(this.error));
   }
 
@@ -95,7 +95,7 @@ export class Err<E> {
     return this.error;
   }
 
-  public match<U>(handlers: { ok: (value: never) => U; err: (error: E) => U }): U {
+  public match<U>(handlers: { ok: (_value: never) => U; err: (_error: E) => U }): U {
     return handlers.err(this.error);
   }
 }

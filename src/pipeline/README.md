@@ -15,17 +15,81 @@ The pipeline consists of three main stages:
 ## Quick Start
 
 ```typescript
-import { PipelineConfigFactory } from "./pipeline";
+import { PipelineConfigFactory } from "./configs.js";
 
-// Create a pipeline configuration
-const config = PipelineConfigFactory.barcelonaEvents({
-  headless: true,
+// Create a basic pipeline configuration
+const config = PipelineConfigFactory.createBasicConfig({
+  url: "https://events-site.com",
+  schema: "event-v1",
+  fieldMappings: {
+    title: {
+      selector: "h1.event-title",
+      attribute: "text",
+      required: true,
+    },
+    date: {
+      selector: ".event-date",
+      attribute: "text",
+      transformer: "date",
+      required: false,
+    },
+  },
   outputPath: "output/events.json",
+  headless: true,
+});
+
+// Or use the event-specific factory for common patterns
+const eventConfig = PipelineConfigFactory.createEventScrapingConfig({
+  url: "https://events-site.com",
+  containerSelector: ".event-item",
+  titleSelector: ".event-title",
+  dateSelector: ".event-date",
+  locationSelector: ".event-location",
+  outputPath: "output/events.json",
+  headless: true,
 });
 
 // Execute the pipeline (implementation would be provided by concrete classes)
 // const pipeline = new ConcretePipeline();
 // const result = await pipeline.execute(config);
+```
+
+## Configuration Factories
+
+The pipeline provides several factory functions to create configurations for
+common scenarios:
+
+### `createBasicConfig()`
+
+For simple web scraping with custom field mappings.
+
+### `createEventScrapingConfig()`
+
+Optimized for event listing pages with common event fields.
+
+### `createCloudConfig()`
+
+For configurations that save to cloud storage (DigitalOcean Spaces).
+
+### `createTestConfig()`
+
+For testing configurations that output to console.
+
+See [CONFIG_GUIDE.md](./CONFIG_GUIDE.md) for detailed documentation.
+
+## Integration Test Configurations
+
+Scenario-specific configurations are maintained in integration tests to ensure
+easy testing and avoid hardcoded defaults:
+
+```typescript
+// Barcelona events example
+import { createBarcelonaEventsConfig } from "./__tests__/integration/barcelona-events.config.js";
+
+const config = createBarcelonaEventsConfig({
+  headless: true,
+  outputPath: "output/barcelona_events.json",
+});
 ```
 
 ## Configuration

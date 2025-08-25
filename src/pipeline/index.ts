@@ -76,10 +76,12 @@ export type {
   PipelineBuilder,
 } from "./orchestrator.js";
 
-// Configuration presets and factory
+// Configuration factory and base templates
 export {
-  BARCELONA_EVENTS_CONFIG,
-  BARCELONA_EVENTS_PRODUCTION_CONFIG,
+  BASE_EXTRACTOR_CONFIG,
+  BASE_TRANSFORMER_CONFIG,
+  BASE_LOADER_CONFIG,
+  NAVIGATION_STEPS,
   TEST_CONFIG,
   PipelineConfigFactory,
 } from "./configs.js";

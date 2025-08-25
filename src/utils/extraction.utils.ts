@@ -15,7 +15,7 @@ const logger = getLogger("DOMExtractor");
  * Generic DOM-based data extractor that uses field mapping configuration
  */
 export class DOMExtractor implements DataExtractor<RawEventData> {
-  public constructor(private readonly fieldMap: ExtractionFieldMap) {}
+  public constructor(private readonly _fieldMap: ExtractionFieldMap) {}
 
   /**
    * Extracts raw data from DOM element using the configured field mapping
@@ -23,7 +23,7 @@ export class DOMExtractor implements DataExtractor<RawEventData> {
   public extract(element: Element): RawEventData {
     const rawData: RawEventData = {};
 
-    for (const [fieldName, config] of Object.entries(this.fieldMap)) {
+    for (const [fieldName, config] of Object.entries(this._fieldMap)) {
       const result = this.extractField(element, fieldName, config);
       if (result.isOk) {
         rawData[fieldName] = result.value;

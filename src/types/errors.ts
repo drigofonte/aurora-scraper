@@ -145,7 +145,7 @@ export function isScraperError(error: unknown): error is ScraperError {
  */
 export function isSpecificScraperError<T extends ScraperError>(
   error: unknown,
-  errorClass: new (...args: unknown[]) => T
+  errorClass: new (..._args: unknown[]) => T
 ): error is T {
   return error instanceof errorClass;
 }

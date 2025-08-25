@@ -430,14 +430,14 @@ export type LoaderErrorCode =
  * Main pipeline interface
  */
 export interface Pipeline {
-  execute(config: PipelineConfig): Promise<Result<PipelineResult, PipelineError>>;
+  execute(_config: PipelineConfig): Promise<Result<PipelineResult, PipelineError>>;
 }
 
 /**
  * Extractor interface
  */
 export interface Extractor {
-  extract(config: ExtractorConfig): Promise<Result<string, ExtractorError>>;
+  extract(_config: ExtractorConfig): Promise<Result<string, ExtractorError>>;
 }
 
 /**
@@ -445,8 +445,8 @@ export interface Extractor {
  */
 export interface Transformer {
   transform(
-    html: string,
-    config: TransformerConfig
+    _html: string,
+    _config: TransformerConfig
   ): Promise<Result<readonly Record<string, unknown>[], TransformerError>>;
 }
 
@@ -455,8 +455,8 @@ export interface Transformer {
  */
 export interface Loader {
   load(
-    data: readonly Record<string, unknown>[],
-    config: LoaderConfig
+    _data: readonly Record<string, unknown>[],
+    _config: LoaderConfig
   ): Promise<Result<string, LoaderError>>;
 }
 
