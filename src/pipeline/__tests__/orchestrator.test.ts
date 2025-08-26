@@ -28,7 +28,7 @@ import { ok, err, type Result } from "../../utils/result.utils.js";
 // Mock implementations
 class MockExtractor implements Extractor {
   async extract(_config: ExtractorConfig): Promise<Result<string, ExtractorError>> {
-    await new Promise<void>((resolve) => setTimeout(resolve, 1)); // Add 1ms delay
+    await new Promise<void>((resolve) => setTimeout(resolve, 5)); // Add 5ms delay
     return ok("<html><body><h1>Test Content</h1></body></html>");
   }
 }
@@ -38,7 +38,7 @@ class MockTransformer implements Transformer {
     _html: string,
     _config: TransformerConfig
   ): Promise<Result<readonly Record<string, unknown>[], TransformerError>> {
-    await new Promise<void>((resolve) => setTimeout(resolve, 1)); // Add 1ms delay
+    await new Promise<void>((resolve) => setTimeout(resolve, 5)); // Add 5ms delay
     return ok([
       { title: "Test Item 1", price: 10.99 },
       { title: "Test Item 2", price: 15.99 },
@@ -51,7 +51,7 @@ class MockLoader implements Loader {
     _data: readonly Record<string, unknown>[],
     _config: LoaderConfig
   ): Promise<Result<string, LoaderError>> {
-    await new Promise<void>((resolve) => setTimeout(resolve, 2)); // Add 2ms delay
+    await new Promise<void>((resolve) => setTimeout(resolve, 5)); // Add 5ms delay
     return ok("console");
   }
 }

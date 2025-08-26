@@ -1,4 +1,12 @@
-- [x] Cleanup the codebase by removing any unnecessary .md files
+- [x] Cleanup the codeb- [x] Ideate the evolution of the field mappings so that
+      the selector and trasformer attributes are included in the schema
+      definition. Is this feasible? Is it more elegant? Does it still produce
+      valid schemas? COMPLETED: Created comprehensive transformer-spec.md that
+      proposes schema-aware transformer specifications. Solution maintains JSON
+      Schema standards compliance while eliminating duplication through
+      type-safe transformer specs that reference pure schemas and provide
+      compile-time validation of field mappings. by removing any unnecessary .md
+      files
 - [x] Cleanup the codebase by removing any unnecessary debug files
 - [x] Review the html-transformer-fixed.test.ts and the html-transformer.test.
       Are they both needed? Could we merge one into the other?
@@ -21,6 +29,10 @@
       throws errors when additional properties are found. Added comprehensive
       test suite covering strict validation scenarios including nested objects,
       batch validation, and edge cases.
+- [x] Ideate the evolution of the field mappings so that the selector and
+      trasformer attributes are included in the schema definition. Is this
+      feasible? Is it more elegant? Does it still produce valid schemas?
+- [ ] Implement the proposed transformer-spec.md
 - [ ] Revise schema validation errors. Are they as useful as they can be right
       now?
 - [x] Create other local examples listed in the README.md COMPLETED: Implemented
@@ -30,6 +42,9 @@
       realistic product entries.
 - [ ] Create real-world examples listed in the README.md
 - [ ] Remove integration tests using the barcelona events from the pipeline
+- [ ] Revise the unit tests for browser navigation. Are they effectively testing
+      real-world scenarios? Maybe we need to create examples of varying levels
+      of complexity.
 - [ ] Modify the copilot-instructions.md to include a modification to the coding
       agent's ReAct loop. Make it think, then act, then run a specific command
       to test its changes. This should be part of best practices somewhere as it
@@ -46,7 +61,7 @@
       something else or it should live within the extractor module
 - [ ] Revise the need for the setup_typescript.sh file. Isn't there a better way
       to do this?
-- [ ] Research SAST tool
+- [ ] Research SAST tool (trivy, snyk, etc)
 - [ ] Integrate Sonarqube (or similar) checks as part of the commit pipeline
 - [ ] Integrate test coverage metrics into the commit pipeline
 - [ ] Create devcontainer setup
