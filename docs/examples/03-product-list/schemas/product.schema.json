@@ -20,7 +20,7 @@
       "description": "Product price as displayed (with currency)"
     },
     "originalPrice": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Original price before discount"
     },
     "rating": {
@@ -40,8 +40,7 @@
       "description": "URL of the product image"
     },
     "productUrl": {
-      "type": "string",
-      "format": "uri",
+      "type": ["string", "null"],
       "description": "URL link to the product detail page"
     },
     "brand": {
@@ -58,7 +57,7 @@
       "description": "Product availability status"
     },
     "discount": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Discount percentage or amount"
     }
   },

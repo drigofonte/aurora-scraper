@@ -2,7 +2,7 @@
  * Schema validator for validating transformed data against JSON schemas
  */
 
-import Ajv, { type ValidateFunction, type ErrorObject } from "ajv";
+import Ajv from "ajv";
 import type { Result } from "../../utils/result.utils.js";
 import { ok, err } from "../../utils/result.utils.js";
 import type { TransformerError } from "../types.js";
@@ -10,6 +10,21 @@ import { getLogger } from "../../utils/logger.utils.js";
 import { SchemaRegistry } from "../../schemas/index.js";
 
 const logger = getLogger("SchemaValidator");
+
+/**
+ * Safe structured clone utility that works across Node.js versions
+ */
+const safeStructuredClone = <T>(obj: T): T => {
+  // Use native structuredClone if available (Node.js 17+)
+  if (typeof globalThis !== "undefined" && "structuredClone" in globalThis) {
+    const globalWithStructuredClone = globalThis as unknown as {
+      structuredClone: <U>(_value: U) => U;
+    };
+    return globalWithStructuredClone.structuredClone(obj);
+  }
+  // Fallback to JSON parse/stringify for basic cloning
+  return JSON.parse(JSON.stringify(obj)) as T;
+};
 
 /**
  * Validation result with detailed error information
@@ -79,6 +94,50 @@ export class SchemaValidator {
   }
 
   /**
+   * Process AJV validation errors and categorize them
+   */
+  private processValidationErrors(
+    ajvErrors: NonNullable<ReturnType<typeof this.ajv.compile>["errors"]>,
+    strict: boolean
+  ): { errors: ValidationError[]; warnings: ValidationWarning[] } {
+    const errors: ValidationError[] = [];
+    const warnings: ValidationWarning[] = [];
+
+    for (const ajvError of ajvErrors) {
+      const expectedType =
+        typeof ajvError.schema === "object" && ajvError.schema !== null && "type" in ajvError.schema
+          ? String(ajvError.schema.type)
+          : undefined;
+
+      const field = ajvError.instancePath || ajvError.schemaPath || "root";
+      const message = ajvError.message || "Validation failed";
+
+      const errorDetails: ValidationError = {
+        field,
+        message,
+        value: ajvError.data,
+        ...(expectedType && { expectedType }),
+      };
+
+      // In strict mode, any validation error is treated as an error
+      // In non-strict mode, additional properties could be warnings
+      if (strict || !message.includes("additionalProperties")) {
+        errors.push(errorDetails);
+      } else {
+        // Convert additional properties to warnings in non-strict mode
+        const warning: ValidationWarning = {
+          field,
+          message,
+          value: ajvError.data,
+        };
+        warnings.push(warning);
+      }
+    }
+
+    return { errors, warnings };
+  }
+
+  /**
    * Validate a single record against a schema
    */
   validateRecord(
@@ -101,46 +160,18 @@ export class SchemaValidator {
       }
 
       // Clone record for validation
-      const recordToValidate = structuredClone(record);
+      const recordToValidate = safeStructuredClone(record);
 
       // Perform validation
       const isValid = schema(recordToValidate);
-      const errors: ValidationError[] = [];
-      const warnings: ValidationWarning[] = [];
+      let errors: ValidationError[] = [];
+      let warnings: ValidationWarning[] = [];
 
+      // Process validation errors if any
       if (!isValid && schema.errors) {
-        for (const ajvError of schema.errors) {
-          const expectedType =
-            typeof ajvError.schema === "object" &&
-            ajvError.schema !== null &&
-            "type" in ajvError.schema
-              ? String(ajvError.schema.type)
-              : undefined;
-
-          const field = ajvError.instancePath || ajvError.schemaPath || "root";
-          const message = ajvError.message || "Validation failed";
-
-          const error: ValidationError = {
-            field,
-            message,
-            value: ajvError.data,
-            ...(expectedType && { expectedType }),
-          };
-
-          // In strict mode, any validation error is treated as an error
-          // In non-strict mode, additional properties could be warnings
-          if (strict || !message.includes("additionalProperties")) {
-            errors.push(error);
-          } else {
-            // Convert additional properties to warnings in non-strict mode
-            const warning: ValidationWarning = {
-              field,
-              message,
-              value: ajvError.data,
-            };
-            warnings.push(warning);
-          }
-        }
+        const processedErrors = this.processValidationErrors(schema.errors, strict);
+        errors = processedErrors.errors;
+        warnings = processedErrors.warnings;
       }
 
       const validationResult: ValidationResult = {

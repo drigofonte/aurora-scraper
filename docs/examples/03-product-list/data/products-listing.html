@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Electronics Store - Product Listings</title>
+    <style>
+      .products-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        padding: 20px;
+      }
+      .product-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 16px;
+        background: white;
+      }
+      .product-image img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+      }
+      .product-name {
+        font-size: 18px;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+      .product-description {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+      .price-section {
+        margin: 10px 0;
+      }
+      .price {
+        font-size: 20px;
+        font-weight: bold;
+        color: #e47911;
+      }
+      .original-price {
+        text-decoration: line-through;
+        color: #999;
+        margin-left: 10px;
+      }
+      .discount {
+        color: #c45500;
+        font-weight: bold;
+      }
+      .rating {
+        color: #ff9500;
+        margin: 5px 0;
+      }
+      .availability {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .in-stock {
+        background: #e8f5e8;
+        color: #2e7d32;
+      }
+      .out-of-stock {
+        background: #ffebee;
+        color: #c62828;
+      }
+      .limited {
+        background: #fff3e0;
+        color: #ef6c00;
+      }
+      .brand {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Electronics Store</h1>
+      <p>Premium Electronics &amp; Gadgets</p>
+    </header>
+
+    <main>
+      <h2>Featured Products</h2>
+
+      <div class="products-grid">
+        <!-- Product 1: Wireless Headphones -->
+        <div class="product-card" data-product-id="1">
+          <div class="product-image">
+            <img
+              src="https://example.com/images/headphones-pro.jpg"
+              alt="Wireless Headphones Pro"
+            />
+          </div>
+          <div class="brand">SoundMax</div>
+          <h3 class="product-name">Wireless Headphones Pro</h3>
+          <p class="product-description">
+            Premium noise-canceling wireless headphones with 30-hour battery life and superior sound
+            quality.
+          </p>
+
+          <div class="price-section">
+            <span class="price">$199.99</span>
+            <span class="original-price">$249.99</span>
+            <span class="discount">20% OFF</span>
+          </div>
+
+          <div class="rating" data-rating="4.5">★★★★★ 4.5 (284 reviews)</div>
+
+          <div class="availability in-stock">In Stock</div>
+
+          <a href="/products/wireless-headphones-pro" class="product-link">View Details</a>
+        </div>
+
+        <!-- Product 2: Smart Watch -->
+        <div class="product-card" data-product-id="2">
+          <div class="product-image">
+            <img src="https://example.com/images/smart-watch-x.jpg" alt="Smart Watch Series X" />
+          </div>
+          <div class="brand">TechWear</div>
+          <h3 class="product-name">Smart Watch Series X</h3>
+          <p class="product-description">
+            Advanced fitness tracking, heart rate monitoring, and smartphone integration in a sleek
+            design.
+          </p>
+
+          <div class="price-section">
+            <span class="price">$399.99</span>
+          </div>
+
+          <div class="rating" data-rating="4.8">★★★★★ 4.8 (1,127 reviews)</div>
+
+          <div class="availability out-of-stock">Out of Stock</div>
+
+          <a href="/products/smart-watch-series-x" class="product-link">View Details</a>
+        </div>
+
+        <!-- Product 3: Bluetooth Speaker -->
+        <div class="product-card" data-product-id="3">
+          <div class="product-image">
+            <img
+              src="https://example.com/images/bluetooth-speaker.jpg"
+              alt="Portable Bluetooth Speaker"
+            />
+          </div>
+          <div class="brand">AudioWave</div>
+          <h3 class="product-name">Portable Bluetooth Speaker</h3>
+          <p class="product-description">
+            Waterproof portable speaker with 360-degree sound and 12-hour battery life. Perfect for
+            outdoor adventures.
+          </p>
+
+          <div class="price-section">
+            <span class="price">$79.99</span>
+            <span class="original-price">$99.99</span>
+            <span class="discount">20% OFF</span>
+          </div>
+
+          <div class="rating" data-rating="4.3">★★★★☆ 4.3 (95 reviews)</div>
+
+          <div class="availability in-stock">In Stock</div>
+
+          <a href="/products/bluetooth-speaker-portable" class="product-link">View Details</a>
+        </div>
+
+        <!-- Product 4: Laptop Stand -->
+        <div class="product-card" data-product-id="4">
+          <div class="product-image">
+            <img src="https://example.com/images/laptop-stand.jpg" alt="Adjustable Laptop Stand" />
+          </div>
+          <div class="brand">ErgoTech</div>
+          <h3 class="product-name">Adjustable Laptop Stand</h3>
+          <p class="product-description">
+            Ergonomic aluminum laptop stand with 6 height levels and excellent heat dissipation.
+          </p>
+
+          <div class="price-section">
+            <span class="price">$34.99</span>
+          </div>
+
+          <div class="rating" data-rating="4.2">★★★★☆ 4.2 (67 reviews)</div>
+
+          <div class="availability limited">Only 3 left</div>
+
+          <a href="/products/laptop-stand-adjustable" class="product-link">View Details</a>
+        </div>
+
+        <!-- Product 5: Wireless Mouse -->
+        <div class="product-card" data-product-id="5">
+          <div class="product-image">
+            <img
+              src="https://example.com/images/wireless-mouse.jpg"
+              alt="Ergonomic Wireless Mouse"
+            />
+          </div>
+          <div class="brand">ClickMaster</div>
+          <h3 class="product-name">Ergonomic Wireless Mouse</h3>
+          <p class="product-description">
+            Precision wireless mouse with ergonomic design, programmable buttons, and long-lasting
+            battery.
+          </p>
+
+          <div class="price-section">
+            <span class="price">$49.99</span>
+            <span class="original-price">$59.99</span>
+            <span class="discount">17% OFF</span>
+          </div>
+
+          <div class="rating" data-rating="4.6">★★★★★ 4.6 (203 reviews)</div>
+
+          <div class="availability in-stock">In Stock</div>
+
+          <a href="/products/wireless-mouse-ergonomic" class="product-link">View Details</a>
+        </div>
+
+        <!-- Product 6: USB-C Hub -->
+        <div class="product-card" data-product-id="6">
+          <div class="product-image">
+            <img src="https://example.com/images/usb-c-hub.jpg" alt="Multi-Port USB-C Hub" />
+          </div>
+          <div class="brand">ConnectPro</div>
+          <h3 class="product-name">Multi-Port USB-C Hub</h3>
+          <p class="product-description">
+            7-in-1 USB-C hub with HDMI, USB 3.0, SD card reader, and 100W power delivery support.
+          </p>
+
+          <div class="price-section">
+            <span class="price">$89.99</span>
+          </div>
+
+          <div class="rating" data-rating="4.4">★★★★☆ 4.4 (158 reviews)</div>
+
+          <div class="availability in-stock">In Stock</div>
+
+          <a href="/products/usb-c-hub-7in1" class="product-link">View Details</a>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>&copy; 2024 Electronics Store. All rights reserved.</p>
+    </footer>
+  </body>
+</html>

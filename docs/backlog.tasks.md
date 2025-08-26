@@ -23,7 +23,11 @@
       batch validation, and edge cases.
 - [ ] Revise schema validation errors. Are they as useful as they can be right
       now?
-- [ ] Create other local examples listed in the README.md
+- [x] Create other local examples listed in the README.md COMPLETED: Implemented
+      03-product-list example demonstrating list-based extraction from
+      e-commerce product listings. Includes comprehensive configuration for
+      multiple field mappings, schema validation, and sample HTML data with 6
+      realistic product entries.
 - [ ] Create real-world examples listed in the README.md
 - [ ] Remove integration tests using the barcelona events from the pipeline
 - [ ] Modify the copilot-instructions.md to include a modification to the coding
