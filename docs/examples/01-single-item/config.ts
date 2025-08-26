@@ -23,7 +23,6 @@ export function createArticleConfig(options: ArticleConfigOptions): PipelineConf
     },
     transformer: {
       type: "item",
-      schema: "article-schema",
       fieldMappings: {
         title: {
           selector: "h1, .article-title, .title",

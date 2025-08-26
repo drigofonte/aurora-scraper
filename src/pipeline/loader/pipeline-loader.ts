@@ -112,47 +112,35 @@ export class PipelineLoader implements Loader {
       case "file": {
         const fileConfig = config.targetConfig as FileTargetConfig;
         return {
-          type: "file",
-          config: {
-            path: fileConfig.path,
-            format: fileConfig.format,
-            encoding: fileConfig.encoding,
-            createDirectory: fileConfig.createDirectory,
-          },
+          path: fileConfig.path,
+          format: fileConfig.format,
+          encoding: fileConfig.encoding,
+          createDirectory: fileConfig.createDirectory,
         };
       }
       case "console": {
         const consoleConfig = config.targetConfig as ConsoleTargetConfig;
         return {
-          type: "console",
-          config: {
-            format: consoleConfig.format,
-            pretty: consoleConfig.pretty,
-          },
+          format: consoleConfig.format,
+          pretty: consoleConfig.pretty,
         };
       }
       case "database": {
         const dbConfig = config.targetConfig as DatabaseTargetConfig;
         return {
-          type: "database",
-          config: {
-            connectionString: dbConfig.connectionString,
-            table: dbConfig.table,
-            schema: dbConfig.schema,
-            upsert: dbConfig.upsert,
-          },
+          connectionString: dbConfig.connectionString,
+          table: dbConfig.table,
+          schema: dbConfig.schema,
+          upsert: dbConfig.upsert,
         };
       }
       case "webhook": {
         const webhookConfig = config.targetConfig as WebhookTargetConfig;
         return {
-          type: "api",
-          config: {
-            url: webhookConfig.url,
-            method: webhookConfig.method,
-            headers: webhookConfig.headers,
-            timeout: webhookConfig.timeout,
-          },
+          url: webhookConfig.url,
+          method: webhookConfig.method,
+          headers: webhookConfig.headers,
+          timeout: webhookConfig.timeout,
         };
       }
       default:
