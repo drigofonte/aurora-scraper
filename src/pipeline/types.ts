@@ -164,7 +164,7 @@ export type ExtractorErrorCode =
  */
 export interface TransformerConfig {
   readonly type: TransformerType;
-  readonly schema?: string;
+  readonly schema: string;
   readonly fieldMappings: Record<string, FieldMapping>;
   readonly listConfig?: ListTransformerConfig;
   readonly validationRules?: readonly ValidationRule[];

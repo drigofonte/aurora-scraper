@@ -8,6 +8,7 @@ import type { Result } from "../../utils/result.utils.js";
 import { ok, err } from "../../utils/result.utils.js";
 import type { FieldMapping, ElementAttribute, TransformerError } from "../types.js";
 import { getLogger } from "../../utils/logger.utils.js";
+import { FieldTransformerEngine } from "./field-transformer.js";
 
 const logger = getLogger("SelectorEngine");
 
@@ -23,10 +24,34 @@ export interface ExtractedField {
 }
 
 /**
+ * Set a nested property using dot notation
+ */
+function setNestedProperty(obj: Record<string, unknown>, path: string, value: unknown): void {
+  const keys = path.split(".");
+  let current = obj;
+
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    if (!key) continue; // Skip empty keys
+
+    if (!(key in current) || typeof current[key] !== "object" || current[key] === null) {
+      current[key] = {};
+    }
+    current = current[key] as Record<string, unknown>;
+  }
+
+  const lastKey = keys[keys.length - 1];
+  if (lastKey) {
+    current[lastKey] = value;
+  }
+}
+
+/**
  * Selector engine for processing CSS selectors and extracting data
  */
 export class SelectorEngine {
   private $: cheerio.CheerioAPI | null = null;
+  private readonly fieldTransformer = new FieldTransformerEngine();
 
   /**
    * Load HTML content into the selector engine
@@ -300,7 +325,7 @@ export class SelectorEngine {
         errors.push(`Required field '${fieldName}': ${extractionResult.error.message}`);
       } else {
         // Use default value for optional fields
-        result[fieldName] = mapping.defaultValue ?? null;
+        setNestedProperty(result, fieldName, mapping.defaultValue ?? null);
       }
       return;
     }
@@ -313,9 +338,23 @@ export class SelectorEngine {
       (!extracted.found || extracted.value === null || extracted.value === undefined)
     ) {
       errors.push(`Required field '${fieldName}' not found or empty`);
-    } else {
-      result[fieldName] = extracted.value;
+      return;
     }
+
+    // Apply field transformation
+    const transformResult = this.fieldTransformer.transformField(extracted.value, mapping);
+    if (transformResult.isErr) {
+      if (mapping.required) {
+        errors.push(
+          `Required field '${fieldName}' transformation failed: ${transformResult.error.message}`
+        );
+      } else {
+        setNestedProperty(result, fieldName, mapping.defaultValue ?? null);
+      }
+      return;
+    }
+
+    setNestedProperty(result, fieldName, transformResult.value);
   }
 
   /**
@@ -333,7 +372,7 @@ export class SelectorEngine {
       errors.push(message);
     } else {
       logger.warn(message);
-      result[fieldName] = mapping.defaultValue ?? null;
+      setNestedProperty(result, fieldName, mapping.defaultValue ?? null);
     }
   }
 }

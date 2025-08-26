@@ -19,9 +19,10 @@ async function runSingleItemExample(): Promise<void> {
   logger.info("🚀 Starting Single Item Extraction Example");
 
   try {
-    // Create pipeline using factory
+    // Create pipeline using factory with local schema validation
     const factory = new PipelineFactory();
-    const pipeline = factory.createDefault();
+    const localSchemasPath = join(__dirname, "schemas");
+    const pipeline = await factory.createDefaultWithCustomSchemas(localSchemasPath);
 
     // Create configuration for article extraction
     const config = createArticleConfig({

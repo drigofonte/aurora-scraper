@@ -7,12 +7,22 @@
       README.md for each example and complete documentation showing how to
       scrape single items, lists of items, etc.
 - [x] Test the current examples in the docs/examples folder
-- [ ] Fix schema loading and validation system - implement
+- [x] Fix schema loading and validation system - implement
       loadSchemasFromDirectory method in SchemaRegistry and ensure schemas are
       properly loaded during pipeline initialization. Currently schema
       validation is disabled as a workaround.
-- [ ] Review the use of schemas in the schemas folder. Could they be deleted or
-      moved to a docs/examples folder?
+- [x] Review the use of schemas in the schemas folder. Could they be deleted or
+      moved to a docs/examples folder? COMPLETED: Moved schemas to
+      example-specific directories. Each example now has data/, output/, and
+      schemas/ folders.
+- [x] Revise schema validation test cases. For example, if strict validation is
+      enabled, when additionalFields are found, an exception should be thrown.
+      COMPLETED: Enhanced SchemaValidator with strict validation mode that
+      throws errors when additional properties are found. Added comprehensive
+      test suite covering strict validation scenarios including nested objects,
+      batch validation, and edge cases.
+- [ ] Revise schema validation errors. Are they as useful as they can be right
+      now?
 - [ ] Create other local examples listed in the README.md
 - [ ] Create real-world examples listed in the README.md
 - [ ] Remove integration tests using the barcelona events from the pipeline

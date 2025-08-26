@@ -33,6 +33,12 @@ import { getLogger } from "../utils/logger.utils.js";
 import { createWebExtractor } from "./extractor/web-extractor.js";
 import { createHtmlTransformer } from "./transformer/html-transformer.js";
 import { createPipelineLoader } from "./loader/pipeline-loader.js";
+import { SchemaValidator } from "./transformer/schema-validator.js";
+import {
+  initializeSchemas,
+  initializeSchemasFromDirectory,
+  defaultSchemaRegistry,
+} from "../schemas/index.js";
 
 const logger = getLogger("PipelineOrchestrator");
 
@@ -360,6 +366,44 @@ export class PipelineFactory {
     const config: PipelineOrchestratorConfig = {
       extractor: createWebExtractor(),
       transformer: createHtmlTransformer(),
+      loader: createPipelineLoader(),
+    };
+
+    return new PipelineOrchestrator(config);
+  }
+
+  /**
+   * Create a pipeline orchestrator with default implementations and initialize schemas from custom directory
+   */
+  async createDefaultWithCustomSchemas(schemaDirectory: string): Promise<PipelineOrchestrator> {
+    // Initialize schemas from custom directory
+    await initializeSchemasFromDirectory(schemaDirectory, defaultSchemaRegistry);
+
+    // Create schema validator with initialized registry
+    const schemaValidator = new SchemaValidator(defaultSchemaRegistry);
+
+    const config: PipelineOrchestratorConfig = {
+      extractor: createWebExtractor(),
+      transformer: createHtmlTransformer(undefined, undefined, schemaValidator),
+      loader: createPipelineLoader(),
+    };
+
+    return new PipelineOrchestrator(config);
+  }
+
+  /**
+   * Create a pipeline orchestrator with default implementations and initialize schemas
+   */
+  async createDefaultWithSchemas(): Promise<PipelineOrchestrator> {
+    // Initialize schemas first
+    await initializeSchemas(defaultSchemaRegistry);
+
+    // Create schema validator with initialized registry
+    const schemaValidator = new SchemaValidator(defaultSchemaRegistry);
+
+    const config: PipelineOrchestratorConfig = {
+      extractor: createWebExtractor(),
+      transformer: createHtmlTransformer(undefined, undefined, schemaValidator),
       loader: createPipelineLoader(),
     };
 

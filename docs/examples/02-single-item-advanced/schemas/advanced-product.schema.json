@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/schemas/advanced-product.json",
+  "title": "Advanced Product Schema",
+  "description": "Schema for advanced product extraction with complex field mapping",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Product title"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Product SKU"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Product brand"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category"
+    },
+    "currentPrice": {
+      "type": "number",
+      "description": "Current price"
+    },
+    "originalPrice": {
+      "type": "number",
+      "description": "Original price before discount"
+    },
+    "currency": {
+      "type": "string",
+      "description": "Currency code"
+    },
+    "discountPercent": {
+      "type": "number",
+      "description": "Discount percentage"
+    },
+    "freeShipping": {
+      "type": "boolean",
+      "description": "Free shipping available"
+    },
+    "stockStatus": {
+      "type": "string",
+      "enum": ["in-stock", "out-of-stock", "low", "unknown"],
+      "description": "Stock status"
+    },
+    "stockLevel": {
+      "type": "number",
+      "description": "Remaining stock quantity"
+    },
+    "estimatedDelivery": {
+      "type": "string",
+      "description": "Estimated delivery date"
+    },
+    "processor": {
+      "type": "string",
+      "description": "CPU specification"
+    },
+    "memory": {
+      "type": "string",
+      "description": "RAM specification"
+    },
+    "storage": {
+      "type": "string",
+      "description": "Storage specification"
+    },
+    "display": {
+      "type": "string",
+      "description": "Display specification"
+    },
+    "graphics": {
+      "type": "string",
+      "description": "Graphics card specification"
+    },
+    "weight": {
+      "type": "string",
+      "description": "Product weight"
+    },
+    "dimensions": {
+      "type": "string",
+      "description": "Product dimensions"
+    },
+    "battery": {
+      "type": "string",
+      "description": "Battery specification"
+    },
+    "connectivity": {
+      "type": "string",
+      "description": "Ports and connectivity"
+    },
+    "operatingSystem": {
+      "type": "string",
+      "description": "Operating system"
+    },
+    "averageRating": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Average rating (0-5 stars)"
+    },
+    "totalReviews": {
+      "type": "number",
+      "description": "Total number of reviews"
+    },
+    "mainImage": {
+      "type": "string",
+      "description": "Main product image URL"
+    },
+    "sellerName": {
+      "type": "string",
+      "description": "Seller name"
+    },
+    "sellerId": {
+      "type": "string",
+      "description": "Seller ID"
+    },
+    "sellerRating": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Seller rating"
+    }
+  },
+  "required": ["title", "sku", "currentPrice"]
+}

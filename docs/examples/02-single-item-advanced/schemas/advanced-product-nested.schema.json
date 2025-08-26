@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/schemas/advanced-product.schema.json",
+  "title": "Advanced Product Schema",
+  "description": "Schema for complex product data with nested structure",
+  "type": "object",
+  "properties": {
+    "basic": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Product title or name"
+        },
+        "sku": {
+          "type": "string",
+          "description": "Product SKU or identifier"
+        },
+        "brand": {
+          "type": "string",
+          "description": "Product brand or manufacturer"
+        },
+        "category": {
+          "type": "string",
+          "description": "Product category"
+        }
+      },
+      "required": ["title", "sku"],
+      "additionalProperties": false
+    },
+    "pricing": {
+      "type": "object",
+      "properties": {
+        "currentPrice": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Current selling price"
+        },
+        "originalPrice": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Original or list price"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "description": "Currency code (ISO 4217)"
+        },
+        "discount": {
+          "type": "object",
+          "properties": {
+            "percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Discount percentage"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["currentPrice"],
+      "additionalProperties": false
+    },
+    "availability": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["in-stock", "low-stock", "out-of-stock", "unknown"],
+          "description": "Stock availability status"
+        },
+        "stockLevel": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Current stock level"
+        },
+        "estimatedDelivery": {
+          "type": "string",
+          "format": "date",
+          "description": "Estimated delivery date"
+        }
+      },
+      "additionalProperties": false
+    },
+    "specifications": {
+      "type": "object",
+      "properties": {
+        "processor": {
+          "type": "string",
+          "description": "Processor/CPU specification"
+        },
+        "memory": {
+          "type": "string",
+          "description": "Memory/RAM specification"
+        },
+        "storage": {
+          "type": "string",
+          "description": "Storage specification"
+        },
+        "display": {
+          "type": "string",
+          "description": "Display specification"
+        }
+      },
+      "additionalProperties": true
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of product features"
+    },
+    "images": {
+      "type": "object",
+      "properties": {
+        "gallery": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "Product image gallery URLs"
+        }
+      },
+      "additionalProperties": false
+    },
+    "reviews": {
+      "type": "object",
+      "properties": {
+        "averageRating": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Average customer rating"
+        },
+        "totalReviews": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total number of reviews"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["basic", "pricing"],
+  "additionalProperties": false
+}

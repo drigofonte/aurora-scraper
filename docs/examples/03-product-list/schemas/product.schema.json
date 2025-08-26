@@ -1,0 +1,67 @@
+{
+  "$id": "https://project-aurora.com/schemas/product.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Product Schema",
+  "description": "Schema for product data extracted from e-commerce listings",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "The product name or title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Product description or summary"
+    },
+    "price": {
+      "type": "string",
+      "description": "Product price as displayed (with currency)"
+    },
+    "originalPrice": {
+      "type": "string",
+      "description": "Original price before discount"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Customer rating (0-5 stars)"
+    },
+    "reviewCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of customer reviews"
+    },
+    "imageUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL of the product image"
+    },
+    "productUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL link to the product detail page"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Product brand or manufacturer"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category"
+    },
+    "availability": {
+      "type": "string",
+      "enum": ["in-stock", "out-of-stock", "limited", "pre-order"],
+      "description": "Product availability status"
+    },
+    "discount": {
+      "type": "string",
+      "description": "Discount percentage or amount"
+    }
+  },
+  "required": ["title"],
+  "additionalProperties": false
+}

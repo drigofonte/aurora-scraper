@@ -40,18 +40,41 @@ export interface ValidationWarning {
 }
 
 /**
+ * Validation options for customizing validation behavior
+ */
+export interface ValidationOptions {
+  readonly strict?: boolean; // Throw error on additional properties
+  readonly allowWarnings?: boolean; // Allow records with warnings to pass
+  readonly logErrors?: boolean; // Log validation errors
+  readonly removeAdditional?: boolean; // Remove additional properties from valid records
+}
+
+/**
  * Schema validator for transformed data
  */
 export class SchemaValidator {
   private readonly schemaRegistry: SchemaRegistry;
   private readonly ajv: Ajv;
+  private readonly strictAjv: Ajv;
 
   constructor(schemaRegistry?: SchemaRegistry) {
     this.schemaRegistry = schemaRegistry || new SchemaRegistry();
+
+    // Default AJV instance (lenient)
     this.ajv = new Ajv({
       allErrors: true,
       verbose: true,
-      strict: false, // Allow additional properties by default
+      strict: false,
+      removeAdditional: false,
+    });
+
+    // Strict AJV instance for strict validation
+    this.strictAjv = new Ajv({
+      allErrors: true,
+      verbose: true,
+      strict: true,
+      removeAdditional: "all", // Remove additional properties
+      addUsedSchema: false, // Prevent schema id conflicts
     });
   }
 
@@ -60,10 +83,12 @@ export class SchemaValidator {
    */
   validateRecord(
     record: Record<string, unknown>,
-    schemaName: string
+    schemaName: string,
+    options: ValidationOptions = {}
   ): Result<ValidationResult, TransformerError> {
     try {
-      logger.debug("Starting record validation", { schemaName, record });
+      const { strict = false } = options;
+      logger.debug("Starting record validation", { schemaName, record, strict });
 
       const schema = this.schemaRegistry.getSchema(schemaName);
       if (!schema) {
@@ -75,8 +100,11 @@ export class SchemaValidator {
         return err(error);
       }
 
+      // Clone record for validation
+      const recordToValidate = structuredClone(record);
+
       // Perform validation
-      const isValid = schema(record);
+      const isValid = schema(recordToValidate);
       const errors: ValidationError[] = [];
       const warnings: ValidationWarning[] = [];
 
@@ -89,18 +117,34 @@ export class SchemaValidator {
               ? String(ajvError.schema.type)
               : undefined;
 
+          const field = ajvError.instancePath || ajvError.schemaPath || "root";
+          const message = ajvError.message || "Validation failed";
+
           const error: ValidationError = {
-            field: ajvError.instancePath || ajvError.schemaPath || "root",
-            message: ajvError.message || "Validation failed",
+            field,
+            message,
             value: ajvError.data,
             ...(expectedType && { expectedType }),
           };
-          errors.push(error);
+
+          // In strict mode, any validation error is treated as an error
+          // In non-strict mode, additional properties could be warnings
+          if (strict || !message.includes("additionalProperties")) {
+            errors.push(error);
+          } else {
+            // Convert additional properties to warnings in non-strict mode
+            const warning: ValidationWarning = {
+              field,
+              message,
+              value: ajvError.data,
+            };
+            warnings.push(warning);
+          }
         }
       }
 
       const validationResult: ValidationResult = {
-        valid: isValid,
+        valid: isValid && errors.length === 0, // Invalid if there are any errors
         errors,
         warnings,
       };
@@ -109,6 +153,8 @@ export class SchemaValidator {
         schemaName,
         valid: validationResult.valid,
         errorCount: validationResult.errors.length,
+        warningCount: validationResult.warnings.length,
+        strict,
       });
 
       return ok(validationResult);
@@ -127,13 +173,14 @@ export class SchemaValidator {
    */
   validateRecords(
     records: readonly Record<string, unknown>[],
-    schemaName: string
+    schemaName: string,
+    options: ValidationOptions = {}
   ): Result<readonly ValidationResult[], TransformerError> {
     const results: ValidationResult[] = [];
     let hasErrors = false;
 
     for (const [index, record] of records.entries()) {
-      const validationResult = this.validateRecord(record, schemaName);
+      const validationResult = this.validateRecord(record, schemaName, options);
 
       if (validationResult.isErr) {
         const error: TransformerError = {
@@ -154,6 +201,7 @@ export class SchemaValidator {
       schemaName,
       recordCount: records.length,
       hasErrors,
+      strict: options.strict,
     });
 
     return ok(results);
@@ -165,18 +213,15 @@ export class SchemaValidator {
   validateAndFilter(
     records: readonly Record<string, unknown>[],
     schemaName: string,
-    options: {
-      readonly allowWarnings?: boolean;
-      readonly logErrors?: boolean;
-    } = {}
+    options: ValidationOptions = {}
   ): Result<readonly Record<string, unknown>[], TransformerError> {
-    const { allowWarnings = true, logErrors = true } = options;
+    const { allowWarnings = true, logErrors = true, strict = false } = options;
     const validRecords: Record<string, unknown>[] = [];
     let validCount = 0;
     let errorCount = 0;
 
     for (const [index, record] of records.entries()) {
-      const validationResult = this.validateRecord(record, schemaName);
+      const validationResult = this.validateRecord(record, schemaName, { strict });
 
       if (validationResult.isErr) {
         errorCount++;
@@ -197,6 +242,7 @@ export class SchemaValidator {
           logger.warn(`Record ${index} failed validation`, {
             errors: result.errors,
             warnings: result.warnings,
+            strict,
           });
         }
       }

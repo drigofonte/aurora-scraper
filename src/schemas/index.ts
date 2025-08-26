@@ -1,12 +1,38 @@
 /**
- * Schema registry for managing JSON schemas used in data validation
+ * Schema Registry for ETL Pipeline Data Validation
+ *
+ * This module provides JSON Schema validation for extracted data, ensuring data quality
+ * and consistency across the ETL pipeline. It automatically loads schemas from the
+ * schemas directory and provides runtime validation.
+ *
+ * @example
+ * ```typescript
+ * // Auto-load schemas from directory
+ * const registry = await initializeSchemas();
+ *
+ * // Validate data against a schema
+ * const isValid = registry.validateData(extractedData, 'article');
+ * ```
  */
 
 import type { ValidateFunction } from "ajv";
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
+import { promises as fs } from "fs";
+import { join, basename, extname } from "path";
+import { getLogger } from "../utils/logger.utils.js";
 
-// Schema imports - these would be loaded dynamically in a real implementation
+const logger = getLogger("SchemaRegistry");
+
+/**
+ * TypeScript interfaces for example schemas.
+ * These correspond to the JSON schema files in this directory.
+ */
+
+/** Article/blog post data structure - matches article.schema.json */
 export interface ArticleData {
   readonly title: string;
+  readonly author?: string;
   readonly publishedDate?: string;
   readonly content?: string;
   readonly metadata?: string;
@@ -88,11 +114,68 @@ export class SchemaRegistry {
   }
 
   /**
-   * Load schemas from file system (placeholder for future implementation)
+   * Load schemas from file system
    */
-  async loadSchemasFromDirectory(_directoryPath: string): Promise<void> {
-    // TODO: Implement dynamic schema loading from JSON files
-    throw new Error("Schema loading from directory not yet implemented");
+  async loadSchemasFromDirectory(directoryPath: string): Promise<void> {
+    try {
+      logger.info("Loading schemas from directory", { directoryPath });
+
+      // Create AJV instance for compiling schemas
+      const ajv = new Ajv({
+        allErrors: true,
+        strict: false,
+        validateSchema: false, // Disable meta-schema validation to avoid draft issues
+      });
+
+      // Add format support for date-time, uri, etc.
+      addFormats(ajv);
+
+      // Read all files in the directory
+      const files = await fs.readdir(directoryPath);
+      const schemaFiles = files.filter(
+        (file) => extname(file) === ".json" && file.includes("schema")
+      );
+
+      logger.debug("Found schema files", { files: schemaFiles });
+
+      for (const file of schemaFiles) {
+        try {
+          const filePath = join(directoryPath, file);
+          const schemaContent = await fs.readFile(filePath, "utf-8");
+          const schema = JSON.parse(schemaContent);
+
+          // Extract schema name from filename (e.g., "article.schema.json" -> "article")
+          const schemaName = basename(file, ".schema.json");
+
+          // Compile the schema
+          const validateFunction = ajv.compile(schema);
+
+          // Register the compiled schema
+          this.registerSchema(schemaName, validateFunction);
+
+          logger.debug("Loaded schema", {
+            schemaName,
+            filePath,
+            title: schema.title,
+          });
+        } catch (error) {
+          logger.error("Failed to load schema file", error as Error, { file });
+          // Continue loading other schemas even if one fails
+        }
+      }
+
+      const loadedCount = this.getSchemaNames().length;
+      logger.info("Schema loading completed", {
+        directoryPath,
+        loadedCount,
+        schemaNames: this.getSchemaNames(),
+      });
+    } catch (error) {
+      logger.error("Failed to load schemas from directory", error as Error, { directoryPath });
+      throw new Error(
+        `Schema loading failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   }
 }
 
@@ -102,16 +185,40 @@ export class SchemaRegistry {
 export const defaultSchemaRegistry = new SchemaRegistry();
 
 /**
- * Schema type definitions for known schemas
+ * Initialize schemas by loading them from the default directory
  */
-export type SchemaType = "article" | "search-result" | "event" | "generic-item";
+export async function initializeSchemas(
+  schemaRegistry: SchemaRegistry = defaultSchemaRegistry
+): Promise<void> {
+  try {
+    // Get the schema directory path relative to this file
+    const schemaDirectory = new URL(".", import.meta.url).pathname;
+    await schemaRegistry.loadSchemasFromDirectory(schemaDirectory);
+    logger.info("Default schemas initialized successfully");
+  } catch (error) {
+    logger.error("Failed to initialize default schemas", error as Error);
+    throw error;
+  }
+}
 
 /**
- * Schema file paths mapping
+ * Initialize schemas by loading them from a custom directory
  */
-export const SCHEMA_PATHS = {
-  article: "./article.schema.json",
-  "search-result": "./search-result.schema.json",
-  event: "./event.schema.json",
-  "generic-item": "./generic-item.schema.json",
-} as const;
+export async function initializeSchemasFromDirectory(
+  schemaDirectory: string,
+  schemaRegistry: SchemaRegistry = defaultSchemaRegistry
+): Promise<void> {
+  try {
+    await schemaRegistry.loadSchemasFromDirectory(schemaDirectory);
+    logger.info("Custom schemas initialized successfully", { schemaDirectory });
+  } catch (error) {
+    logger.error("Failed to initialize custom schemas", error as Error, { schemaDirectory });
+    throw error;
+  }
+}
+
+/**
+ * Common schema types that examples might use
+ * Note: Actual schemas now live in example directories (docs/examples/star/schemas/)
+ */
+export type SchemaType = string; // Generic string type since schemas are now dynamic

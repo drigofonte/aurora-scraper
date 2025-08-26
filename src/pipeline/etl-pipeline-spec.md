@@ -119,9 +119,18 @@ type TransformerConfig = ItemTransformerConfig | ListTransformerConfig;
 
 interface FieldMapping {
   selector: string;
-  attribute?: "text" | "href" | "src" | "title";
-  transformer?: "date" | "price" | "url" | "html-to-text";
+  attribute?: "text" | "href" | "src" | "title" | string; // Allow custom attributes
+  transformer?:
+    | "date"
+    | "price"
+    | "url"
+    | "html-to-text"
+    | "number"
+    | "boolean"
+    | "trim";
   required?: boolean;
+  defaultValue?: unknown; // Default value if extraction fails
+  multiple?: boolean; // Extract multiple values as array
 }
 
 interface LoaderConfig {
@@ -131,6 +140,157 @@ interface LoaderConfig {
 ```
 
 ### Configuration Examples
+
+#### Nested Field Mapping Support
+
+The pipeline supports dot-notation for creating nested object structures:
+
+```typescript
+// Example: Advanced product extraction with nested structure
+const advancedProductConfig: ItemTransformerConfig = {
+  extractionPattern: "item",
+  schema: "advanced-product",
+  fieldMappings: {
+    // Basic product information
+    "basic.title": {
+      selector: "h1.product-title",
+      attribute: "text",
+      required: true,
+    },
+    "basic.sku": {
+      selector: "[data-sku]",
+      attribute: "data-sku",
+      required: true,
+    },
+    "basic.brand": { selector: ".brand", attribute: "text" },
+    "basic.category": {
+      selector: "[data-category]",
+      attribute: "data-category",
+    },
+
+    // Pricing information with type transformations
+    "pricing.currentPrice": {
+      selector: "[data-current-price]",
+      attribute: "data-current-price",
+      transformer: "number",
+      required: true,
+    },
+    "pricing.originalPrice": {
+      selector: "[data-original-price]",
+      attribute: "data-original-price",
+      transformer: "number",
+    },
+    "pricing.currency": {
+      selector: "[data-currency]",
+      attribute: "data-currency",
+      defaultValue: "USD",
+    },
+    "pricing.discount.percent": {
+      selector: "[data-discount-percent]",
+      attribute: "data-discount-percent",
+      transformer: "number",
+    },
+
+    // Availability information
+    "availability.status": {
+      selector: "[data-stock-status]",
+      attribute: "data-stock-status",
+      defaultValue: "unknown",
+    },
+    "availability.stockLevel": {
+      selector: "[data-stock-level]",
+      attribute: "data-stock-level",
+      transformer: "number",
+    },
+    "availability.estimatedDelivery": {
+      selector: ".estimated-delivery",
+      attribute: "datetime",
+    },
+
+    // Technical specifications as nested object
+    "specifications.processor": {
+      selector: "[data-spec='cpu']",
+      attribute: "text",
+    },
+    "specifications.memory": {
+      selector: "[data-spec='ram']",
+      attribute: "text",
+    },
+    "specifications.storage": {
+      selector: "[data-spec='storage']",
+      attribute: "text",
+    },
+    "specifications.display": {
+      selector: "[data-spec='display']",
+      attribute: "text",
+    },
+
+    // Arrays using multiple flag
+    features: {
+      selector: "[data-feature]",
+      attribute: "text",
+      multiple: true,
+    },
+    "images.gallery": {
+      selector: ".thumbnail",
+      attribute: "src",
+      multiple: true,
+    },
+
+    // Review metrics
+    "reviews.averageRating": {
+      selector: "[data-rating]",
+      attribute: "data-rating",
+      transformer: "number",
+    },
+    "reviews.totalReviews": {
+      selector: "[data-review-count]",
+      attribute: "data-review-count",
+      transformer: "number",
+    },
+  },
+};
+```
+
+The resulting extracted data will have the nested structure:
+
+```json
+{
+  "basic": {
+    "title": "UltraBook Pro 15\" - High Performance Laptop",
+    "sku": "TST-LT-2024-001",
+    "brand": "TechStore",
+    "category": "electronics/laptops"
+  },
+  "pricing": {
+    "currentPrice": 999.99,
+    "originalPrice": 1299.99,
+    "currency": "USD",
+    "discount": {
+      "percent": 23
+    }
+  },
+  "availability": {
+    "status": "low-stock",
+    "stockLevel": 5,
+    "estimatedDelivery": "2024-01-15"
+  },
+  "specifications": {
+    "processor": "Intel Core i7-12700H",
+    "memory": "16GB DDR4-3200",
+    "storage": "512GB PCIe NVMe SSD",
+    "display": "15.6\" 4K OLED"
+  },
+  "features": ["Latest Intel processor", "16GB DDR4 RAM", "512GB NVMe SSD"],
+  "images": {
+    "gallery": ["/images/laptop-side.jpg", "/images/laptop-keyboard.jpg"]
+  },
+  "reviews": {
+    "averageRating": 4.6,
+    "totalReviews": 1847
+  }
+}
+```
 
 #### Item Extraction Configuration
 

@@ -296,6 +296,10 @@ export class HtmlTransformer {
 /**
  * Factory function to create a new HTML transformer instance
  */
-export function createHtmlTransformer(): HtmlTransformer {
-  return new HtmlTransformer();
+export function createHtmlTransformer(
+  selectorEngine?: SelectorEngine,
+  fieldTransformer?: FieldTransformerEngine,
+  schemaValidator?: SchemaValidator
+): HtmlTransformer {
+  return new HtmlTransformer(selectorEngine, fieldTransformer, schemaValidator);
 }
